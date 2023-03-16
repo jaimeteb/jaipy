@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "jaipy"
+version = "0.1.0"
+description = "Just Another Implementation of a Python-based YOLO system"
+authors = ["Jaime Tenorio <jaimeteb@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# ubuntu tf
+[tool.poetry.group.ubuntu]
+optional = true
+
+[tool.poetry.group.ubuntu.dependencies]
+tensorflow = "^2.11.0"
+
+# macos tf
+[tool.poetry.group.macos]
+optional = true
+
+[tool.poetry.group.macos.dependencies]
+tensorflow-macos = "^2.11.0"
