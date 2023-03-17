@@ -25,3 +25,10 @@ optional = true
 
 [tool.poetry.group.macos.dependencies]
 tensorflow-macos = "^2.11.0"
+
+# linters
+[tool.isort]
+profile = "black"
+
+[tool.pylint.messages_control]
+disable = "E0401, C0116, C0103, R0914"
