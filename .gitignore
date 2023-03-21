@@ -167,3 +167,4 @@ catboost_info/
 mlruns
 
 .vscode/
+.fiftyone/
