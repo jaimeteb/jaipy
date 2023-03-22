@@ -1,16 +1,20 @@
 """
 Image dataset loading and parsing
 """
+# pyright: reportMissingImports=false
 
 import os
+import random
 import typing as t
 
 import fiftyone as fo
 import fiftyone.zoo as foz
+import tensorflow as tf
+import tqdm
 from pydantic import BaseModel, parse_file_as  # pylint: disable=no-name-in-module
+from tensorflow.keras.utils import img_to_array, load_img
 
-CLASSES = ["person", "car", "stop sign", "traffic light", "bicycle"]
-EXPORT_DIR = "./.fiftyone/coco-2017"
+from jaipy import settings
 
 
 class DatasetCategories(BaseModel):
@@ -48,12 +52,39 @@ def generate_dataset_files():
         "coco-2017",
         splits=["train", "test", "validation"],
         label_types=["detections"],
-        classes=CLASSES,
+        classes=settings.CLASSES,
     )
-    dataset.export(".fiftyone/coco-2017", fo.types.COCODetectionDataset)
+    dataset.export(settings.EXPORT_DIR, fo.types.COCODetectionDataset)
     dataset.delete()
 
 
 def get_dataset_labels() -> DatasetLabels:
-    labels = parse_file_as(DatasetLabels, os.path.join(EXPORT_DIR, "labels.json"))
+    print("Loading dataset labels")
+    labels = parse_file_as(
+        DatasetLabels, os.path.join(settings.EXPORT_DIR, "labels.json")
+    )
     return labels
+
+
+# def get_images(n_images: int) -> t.Tuple[t.List, t.List]:
+def get_images(n_images: int) -> tf.Tensor:
+    labels = get_dataset_labels()
+    images_sample = random.sample(labels.images, k=n_images)
+
+    X = []
+
+    images_sample_annotations: t.Dict[int, t.List[DatasetAnnotations]] = {}
+    for idx, img in tqdm.tqdm(enumerate(images_sample)):
+        for ann in labels.annotations:
+            if ann.image_id == img.id:
+                # images_sample_annotations[idx] = ann
+                images_sample_annotations[idx].append(ann)
+
+        img_data = load_img(os.path.join(settings.EXPORT_DIR, "data", img.file_name))
+        img_data = tf.image.resize(img_data, (settings.INPUT_SIZE, settings.INPUT_SIZE))
+        X.append(img_to_array(img_data))
+
+    # print(images_sample_annotations)
+    # print(X)
+    X_tensor = tf.stack(X)
+    return X_tensor
