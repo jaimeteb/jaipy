@@ -9,6 +9,7 @@ readme = "README.md"
 python = ">=3.9,<3.12"
 kaleido = "0.2.1"
 fiftyone = "^0.19.1"
+pydantic = "^1.10.6"
 
 [build-system]
 requires = ["poetry-core"]
@@ -33,4 +34,4 @@ tensorflow-macos = "^2.11.0"
 profile = "black"
 
 [tool.pylint.messages_control]
-disable = "E0401, C0116, C0103, R0914"
+disable = "E0401, C0116, C0103, R0914, R0903, C0115"
