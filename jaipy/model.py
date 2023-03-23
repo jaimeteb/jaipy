@@ -16,6 +16,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.regularizers import l2
 
 from jaipy import settings
+from jaipy.logger import logger
 
 
 def Convolutional(layer: t.Any, filters: int, kernel_size: int, strides: int = 1):
@@ -70,9 +71,9 @@ class Model:
         layer = Convolutional(layer, 1024, 3)
 
         model = tf.keras.Model(input_layer, layer)
-        print(model.summary())
+        model.summary(print_fn=logger.info)
 
         return model
 
     def predict(self, batch: tf.Tensor) -> tf.Tensor:
-        return self.model.predict(batch)
+        return self.model.predict(batch, verbose=0)

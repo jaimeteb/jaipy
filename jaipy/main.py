@@ -2,7 +2,9 @@
 Main module
 """
 
+
 from jaipy.dataset import get_images
+from jaipy.logger import logger
 from jaipy.model import Model
 
 
@@ -11,7 +13,7 @@ def main():
 
     model = Model()
     pred = model.predict(X)
-    print(pred)
+    logger.info(pred)
 
 
 if __name__ == "__main__":

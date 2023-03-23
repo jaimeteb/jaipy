@@ -8,11 +8,11 @@ import random
 import typing as t
 
 import tensorflow as tf
-import tqdm
 from pydantic import BaseModel, parse_file_as  # pylint: disable=no-name-in-module
 from tensorflow.keras.utils import img_to_array, load_img
 
 from jaipy import settings
+from jaipy.logger import logger
 
 
 class DatasetCategories(BaseModel):
@@ -60,7 +60,7 @@ def generate_dataset_files():
 
 
 def get_dataset_labels() -> DatasetLabels:
-    print("Loading dataset labels")
+    logger.info("Loading dataset labels")
     labels = parse_file_as(
         DatasetLabels, os.path.join(settings.EXPORT_DIR, "labels.json")
     )
@@ -75,7 +75,9 @@ def get_images(n_images: int) -> tf.Tensor:
     X = []
 
     images_sample_annotations: t.Dict[int, t.List[DatasetAnnotations]] = {}
-    for idx, img in tqdm.tqdm(enumerate(images_sample)):
+    for idx, img in enumerate(images_sample):
+        if idx % 100 == 0:
+            logger.info("Loading %d images", idx)
         for ann in labels.annotations:
             if ann.image_id == img.id:
                 images_sample_annotations.setdefault(idx, []).append(ann)
@@ -84,7 +86,7 @@ def get_images(n_images: int) -> tf.Tensor:
         img_data = tf.image.resize(img_data, (settings.INPUT_SIZE, settings.INPUT_SIZE))
         X.append(img_to_array(img_data))
 
-    print(images_sample_annotations)
+    logger.info(images_sample_annotations)
     # print(X)
     X_tensor = tf.stack(X)
     return X_tensor
