@@ -36,3 +36,7 @@ profile = "black"
 
 [tool.pylint.messages_control]
 disable = "E0401, C0116, C0103, R0914, R0903, C0115"
+
+# scripts
+[tool.poetry.scripts]
+run = "jaipy.main:main"
