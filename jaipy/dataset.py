@@ -7,6 +7,7 @@ import os
 import random
 import typing as t
 
+import numpy as np
 import tensorflow as tf
 from pydantic import (  # parse_obj_as,; pylint: disable=no-name-in-module
     BaseModel,
@@ -71,21 +72,6 @@ def get_dataset_labels() -> DatasetLabels:
     return labels
 
 
-# def write_image_annotations():
-#     labels = get_dataset_labels()
-#     total_annotations = len(labels.annotations)
-
-#     logger.info("Generating annotations.csv")
-#     images_dict: t.Dict[int, DatasetImages] = {img.id: img for img in labels.images}
-#     with open("annotations.csv", "w+") as f:
-#         for ann in labels.annotations:
-#             img = images_dict[ann.image_id]
-#             f.write(
-#                 f"{img.id},{img.file_name},{img.height},{img.width},"
-#                 f"{ann.category_id},{ann.bbox[0]},{ann.bbox[1]},{ann.bbox[2]},{ann.bbox[3]}\n"
-#             )
-
-
 def get_images(n_images: int) -> t.Tuple[tf.Tensor, tf.Tensor]:
     labels = get_dataset_labels()
 
@@ -97,6 +83,13 @@ def get_images(n_images: int) -> t.Tuple[tf.Tensor, tf.Tensor]:
 
         return image_annotations
 
+    category_indices = {}
+    idx = 0
+    for cat in labels.categories:
+        if cat.name in settings.CLASSES:
+            category_indices[cat.id] = idx
+            idx += 1
+
     image_annotations = _get_image_annotations()
     images_sample = random.sample(labels.images, k=n_images)
 
@@ -106,23 +99,42 @@ def get_images(n_images: int) -> t.Tuple[tf.Tensor, tf.Tensor]:
     for img in images_sample:
         img_data = load_img(os.path.join(settings.EXPORT_DIR, "data", img.file_name))
         img_data = tf.image.resize(img_data, (settings.INPUT_SIZE, settings.INPUT_SIZE))
-        X.append(img_to_array(img_data))
+        X.append(img_to_array(img_data) / 255)
+
+        Y_temp = np.zeros(
+            # (settings.GRID, settings.GRID, 5, settings.NUM_CLASSES + settings.NUM_BOXES)
+            (
+                settings.GRID,
+                settings.GRID,
+                5,
+                settings.NUM_CLASSES,
+            )
+        )
 
         if img.id in image_annotations:
-            Y.append(
-                [
-                    (
-                        ann.bbox[0],
-                        ann.bbox[1],
-                        ann.bbox[2],
-                        ann.bbox[3],
-                        ann.category_id,
-                    )
-                    for ann in image_annotations[img.id]
-                ]
-            )
-        else:
-            Y.append([])
+            for ann in image_annotations[img.id]:
+                if ann.category_id in category_indices:
+                    x = ann.bbox[0] + ann.bbox[2] / 2
+                    y = ann.bbox[1] + ann.bbox[3] / 2
+                    w = ann.bbox[2]
+                    h = ann.bbox[3]
+                    x /= img.width
+                    y /= img.height
+                    w /= img.width
+                    h /= img.height
+
+                    grid_x = int(x * settings.GRID)
+                    grid_y = int(y * settings.GRID)
+
+                    class_index = category_indices[ann.category_id]
+
+                    Y_temp[grid_x, grid_y, 0, class_index] = 1
+                    Y_temp[grid_x, grid_y, 1, class_index] = x
+                    Y_temp[grid_x, grid_y, 2, class_index] = y
+                    Y_temp[grid_x, grid_y, 3, class_index] = w
+                    Y_temp[grid_x, grid_y, 4, class_index] = h
+
+        Y.append(tf.convert_to_tensor(Y_temp))
 
     X_tensor = tf.stack(X)
     Y_tensor = tf.stack(Y)

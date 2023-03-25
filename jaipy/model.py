@@ -89,7 +89,8 @@ class Model:
 
         # Head
         layer = Conv2D(
-            filters=5 * (self.num_classes + self.num_boxes),
+            # filters=5 * (self.num_classes + self.num_boxes),
+            filters=5 * (self.num_classes),
             kernel_size=(1, 1),
             strides=1,
         )(layer)
@@ -97,7 +98,8 @@ class Model:
 
         shape = layer.shape
         final_layer = Reshape(
-            (shape[1], shape[2], 5, self.num_classes + self.num_boxes),
+            # (shape[1], shape[2], 5, self.num_classes + self.num_boxes),
+            (shape[1], shape[2], 5, self.num_classes),
         )(layer)
 
         # Create model

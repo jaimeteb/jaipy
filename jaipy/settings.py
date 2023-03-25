@@ -12,3 +12,4 @@ CLASSES: t.List[str] = ["person", "car", "stop sign", "traffic light", "bicycle"
 EXPORT_DIR: str = "./.fiftyone/coco-2017"
 
 NUM_BOXES: int = 5
+GRID: int = 7
