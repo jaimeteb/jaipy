@@ -3,7 +3,7 @@ Main module
 """
 
 
-from jaipy.dataset import get_images
+from jaipy.dataset import get_images  # , generate_image_annotations
 from jaipy.logger import logger
 from jaipy.model import Model
 
@@ -16,5 +16,5 @@ def main():
     logger.info(pred)
 
 
-if __name__ == "__main__":
-    main()
+# def generate_annotations():
+#     generate_image_annotations()

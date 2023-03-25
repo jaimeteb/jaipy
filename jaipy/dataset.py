@@ -8,7 +8,10 @@ import random
 import typing as t
 
 import tensorflow as tf
-from pydantic import BaseModel, parse_file_as  # pylint: disable=no-name-in-module
+from pydantic import (  # parse_obj_as,; pylint: disable=no-name-in-module
+    BaseModel,
+    parse_file_as,
+)
 from tensorflow.keras.utils import img_to_array, load_img
 
 from jaipy import settings
@@ -64,29 +67,63 @@ def get_dataset_labels() -> DatasetLabels:
     labels = parse_file_as(
         DatasetLabels, os.path.join(settings.EXPORT_DIR, "labels.json")
     )
+
     return labels
 
 
-# def get_images(n_images: int) -> t.Tuple[t.List, t.List]:
-def get_images(n_images: int) -> tf.Tensor:
+# def write_image_annotations():
+#     labels = get_dataset_labels()
+#     total_annotations = len(labels.annotations)
+
+#     logger.info("Generating annotations.csv")
+#     images_dict: t.Dict[int, DatasetImages] = {img.id: img for img in labels.images}
+#     with open("annotations.csv", "w+") as f:
+#         for ann in labels.annotations:
+#             img = images_dict[ann.image_id]
+#             f.write(
+#                 f"{img.id},{img.file_name},{img.height},{img.width},"
+#                 f"{ann.category_id},{ann.bbox[0]},{ann.bbox[1]},{ann.bbox[2]},{ann.bbox[3]}\n"
+#             )
+
+
+def get_images(n_images: int) -> t.Tuple[tf.Tensor, tf.Tensor]:
     labels = get_dataset_labels()
+
+    def _get_image_annotations() -> t.Dict[int, t.List[DatasetAnnotations]]:
+        nonlocal labels
+        image_annotations: t.Dict[int, t.List[DatasetAnnotations]] = {}
+        for ann in labels.annotations:
+            image_annotations.setdefault(ann.image_id, []).append(ann)
+
+        return image_annotations
+
+    image_annotations = _get_image_annotations()
     images_sample = random.sample(labels.images, k=n_images)
 
+    logger.info("Creating image and data tensors")
     X = []
-
-    images_sample_annotations: t.Dict[int, t.List[DatasetAnnotations]] = {}
-    for idx, img in enumerate(images_sample):
-        if idx % 100 == 0:
-            logger.info("Loading %d images", idx)
-        for ann in labels.annotations:
-            if ann.image_id == img.id:
-                images_sample_annotations.setdefault(idx, []).append(ann)
-
+    Y = []
+    for img in images_sample:
         img_data = load_img(os.path.join(settings.EXPORT_DIR, "data", img.file_name))
         img_data = tf.image.resize(img_data, (settings.INPUT_SIZE, settings.INPUT_SIZE))
         X.append(img_to_array(img_data))
 
-    logger.info(images_sample_annotations)
-    # print(X)
+        if img.id in image_annotations:
+            Y.append(
+                [
+                    (
+                        ann.bbox[0],
+                        ann.bbox[1],
+                        ann.bbox[2],
+                        ann.bbox[3],
+                        ann.category_id,
+                    )
+                    for ann in image_annotations[img.id]
+                ]
+            )
+        else:
+            Y.append([])
+
     X_tensor = tf.stack(X)
-    return X_tensor
+    Y_tensor = tf.stack(Y)
+    return X_tensor, Y_tensor

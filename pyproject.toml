@@ -40,3 +40,4 @@ disable = "E0401, C0116, C0103, R0914, R0903, C0115"
 # scripts
 [tool.poetry.scripts]
 run = "jaipy.main:main"
+# annotate = "jaipy.main:write_annotations"
