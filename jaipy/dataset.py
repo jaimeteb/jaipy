@@ -72,7 +72,7 @@ def get_dataset_labels() -> DatasetLabels:
     return labels
 
 
-def get_images(n_images: int) -> t.Tuple[tf.Tensor, tf.Tensor]:
+def get_images(n_images: int = -1) -> t.Tuple[tf.Tensor, tf.Tensor]:
     labels = get_dataset_labels()
 
     def _get_image_annotations() -> t.Dict[int, t.List[DatasetAnnotations]]:
@@ -91,7 +91,9 @@ def get_images(n_images: int) -> t.Tuple[tf.Tensor, tf.Tensor]:
             idx += 1
 
     image_annotations = _get_image_annotations()
-    images_sample = random.sample(labels.images, k=n_images)
+    images_sample = (
+        random.sample(labels.images, k=n_images) if n_images > 0 else labels.images
+    )
 
     logger.info("Creating image and data tensors")
     X = []
