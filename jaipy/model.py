@@ -3,6 +3,7 @@ Convolutional Neural Network model definition
 """
 # pyright: reportMissingImports=false
 
+import datetime as dt
 import typing as t
 
 import tensorflow as tf
@@ -107,6 +108,33 @@ class Model:
         model.summary(print_fn=logger.info)
 
         return model
+
+    def train(self, x_train: tf.Tensor, y_train: tf.Tensor) -> None:
+        assert x_train.shape[0] == y_train.shape[0]
+
+        cutoff = int(x_train.shape[0] * 0.9)
+        x_train_split, x_val_split = x_train[:cutoff], x_train[cutoff:]
+        y_train_split, y_val_split = y_train[:cutoff], y_train[cutoff:]
+
+        self.model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+            loss=tf.keras.losses.MeanSquaredError(),
+            metrics=[tf.keras.metrics.MeanSquaredError()],
+        )
+        self.model.fit(
+            x_train_split,
+            y_train_split,
+            validation_data=(x_val_split, y_val_split),
+            batch_size=64,
+            epochs=10,
+            verbose=1,
+            callbacks=[
+                tf.keras.callbacks.TensorBoard(
+                    log_dir=f"./logs/{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}",
+                    histogram_freq=1,
+                ),
+            ],
+        )
 
     def predict(self, batch: tf.Tensor) -> tf.Tensor:
         return self.model.predict(batch, verbose=0)

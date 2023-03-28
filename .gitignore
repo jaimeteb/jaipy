@@ -168,3 +168,4 @@ mlruns
 
 .vscode/
 .fiftyone/
+logs/

@@ -3,15 +3,17 @@ Main module
 """
 
 
-from jaipy.dataset import get_images  # , generate_image_annotations
+from jaipy.dataset import get_images
 from jaipy.logger import logger
 from jaipy.model import Model
 
 
 def main():
-    X = get_images(4)
+    X, Y = get_images(1_000)
 
     model = Model()
+    model.train(X, Y)
+
     pred = model.predict(X)
     logger.info(pred)
 
