@@ -19,6 +19,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.regularizers import l2
 
 from jaipy import settings
+from jaipy.dataset import DataGenerator
 from jaipy.logger import logger
 
 
@@ -109,22 +110,29 @@ class Model:
 
         return model
 
-    def train(self, x_train: tf.Tensor, y_train: tf.Tensor) -> None:
-        assert x_train.shape[0] == y_train.shape[0]
+    def train(
+        self,
+        # x_train: tf.Tensor,
+        # y_train: tf.Tensor,
+    ) -> None:
+        # assert x_train.shape[0] == y_train.shape[0]
 
-        cutoff = int(x_train.shape[0] * 0.9)
-        x_train_split, x_val_split = x_train[:cutoff], x_train[cutoff:]
-        y_train_split, y_val_split = y_train[:cutoff], y_train[cutoff:]
+        # cutoff = int(x_train.shape[0] * 0.9)
+        # x_train_split, x_val_split = x_train[:cutoff], x_train[cutoff:]
+        # y_train_split, y_val_split = y_train[:cutoff], y_train[cutoff:]
+
+        data_generator = DataGenerator(batch_size=64)
 
         self.model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=1e-3),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.000_1),
             loss=tf.keras.losses.MeanSquaredError(),
             metrics=[tf.keras.metrics.MeanSquaredError()],
         )
         self.model.fit(
-            x_train_split,
-            y_train_split,
-            validation_data=(x_val_split, y_val_split),
+            data_generator,
+            # x_train_split,
+            # y_train_split,
+            # validation_data=(x_val_split, y_val_split),
             batch_size=64,
             epochs=10,
             verbose=1,
