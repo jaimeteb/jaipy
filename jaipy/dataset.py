@@ -76,8 +76,8 @@ class DataGenerator(Sequence):
     def __init__(
         self,
         batch_size: int = 32,
-        # cutoff_start: float = 0.0,
-        # cutoff_end: float = 1.0,
+        cutoff_start: float = 0.0,
+        cutoff_end: float = 1.0,
     ):
         self.batch_size: int = batch_size
 
@@ -89,7 +89,7 @@ class DataGenerator(Sequence):
         }
         self.image_annotations_dict: t.Dict[
             int, t.List[DatasetAnnotations]
-        ] = self._get_image_annotations()
+        ] = self._get_image_annotations(cutoff_start, cutoff_end)
 
         self._shuffle_indices()
 
@@ -102,13 +102,20 @@ class DataGenerator(Sequence):
                 idx += 1
         return category_indices
 
-    def _get_image_annotations(  # pylint: disable=fixme
-        self,
+    def _get_image_annotations(
+        self, cutoff_start: float, cutoff_end: float
     ) -> t.Dict[int, t.List[DatasetAnnotations]]:
         image_annotations: t.Dict[int, t.List[DatasetAnnotations]] = {}
-        # TODO: apply cutoffs here
-        for ann in self.labels.annotations:
-            if self.category_indices.get(ann.category_id) is not None:
+
+        total_annotations = len(self.labels.annotations)
+        cutoff_start_index = int(total_annotations * cutoff_start)
+        cutoff_end_index = int(total_annotations * cutoff_end) - 1
+
+        for idx, ann in enumerate(self.labels.annotations):
+            if (
+                self.category_indices.get(ann.category_id) is not None
+                and cutoff_start_index <= idx <= cutoff_end_index
+            ):
                 image_annotations.setdefault(ann.image_id, []).append(ann)
 
         return image_annotations

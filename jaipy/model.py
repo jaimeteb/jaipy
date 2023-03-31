@@ -67,27 +67,27 @@ class Model:
         layer = MaxPool2D(2, 2, "same")(layer)
 
         layer = Convolutional(layer, 128, 3)
-        layer = Convolutional(layer, 64, 1)
-        layer = Convolutional(layer, 128, 3)
+        # layer = Convolutional(layer, 64, 1)
+        # layer = Convolutional(layer, 128, 3)
         layer = MaxPool2D(2, 2, "same")(layer)
 
         layer = Convolutional(layer, 256, 3)
-        layer = Convolutional(layer, 128, 1)
-        layer = Convolutional(layer, 256, 3)
+        # layer = Convolutional(layer, 128, 1)
+        # layer = Convolutional(layer, 256, 3)
         layer = MaxPool2D(2, 2, "same")(layer)
 
         layer = Convolutional(layer, 512, 3)
-        layer = Convolutional(layer, 256, 1)
-        layer = Convolutional(layer, 512, 3)
-        layer = Convolutional(layer, 256, 1)
-        layer = Convolutional(layer, 512, 3)
+        # layer = Convolutional(layer, 256, 1)
+        # layer = Convolutional(layer, 512, 3)
+        # layer = Convolutional(layer, 256, 1)
+        # layer = Convolutional(layer, 512, 3)
         layer = MaxPool2D(2, 2, "same")(layer)
 
         layer = Convolutional(layer, 1024, 3)
-        layer = Convolutional(layer, 512, 1)
-        layer = Convolutional(layer, 1024, 3)
-        layer = Convolutional(layer, 512, 1)
-        layer = Convolutional(layer, 1024, 3)
+        # layer = Convolutional(layer, 512, 1)
+        # layer = Convolutional(layer, 1024, 3)
+        # layer = Convolutional(layer, 512, 1)
+        # layer = Convolutional(layer, 1024, 3)
 
         # Head
         layer = Conv2D(
@@ -110,31 +110,26 @@ class Model:
 
         return model
 
-    def train(
-        self,
-        # x_train: tf.Tensor,
-        # y_train: tf.Tensor,
-    ) -> None:
-        # assert x_train.shape[0] == y_train.shape[0]
+    def train(self) -> None:
+        BATCH_SIZE = 32
 
-        # cutoff = int(x_train.shape[0] * 0.9)
-        # x_train_split, x_val_split = x_train[:cutoff], x_train[cutoff:]
-        # y_train_split, y_val_split = y_train[:cutoff], y_train[cutoff:]
-
-        data_generator = DataGenerator(batch_size=64)
+        train_data = DataGenerator(
+            batch_size=BATCH_SIZE, cutoff_start=0, cutoff_end=0.09
+        )
+        val_data = DataGenerator(
+            batch_size=BATCH_SIZE, cutoff_start=0.09, cutoff_end=0.10
+        )
 
         self.model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.000_1),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
             loss=tf.keras.losses.MeanSquaredError(),
             metrics=[tf.keras.metrics.MeanSquaredError()],
         )
         self.model.fit(
-            data_generator,
-            # x_train_split,
-            # y_train_split,
-            # validation_data=(x_val_split, y_val_split),
-            batch_size=64,
-            epochs=10,
+            train_data,
+            validation_data=val_data,
+            batch_size=BATCH_SIZE,
+            epochs=5,
             verbose=1,
             callbacks=[
                 tf.keras.callbacks.TensorBoard(
