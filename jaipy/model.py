@@ -18,7 +18,7 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.regularizers import l2
 
-from jaipy import settings
+from jaipy import settings, utils
 from jaipy.dataset import DataGenerator
 from jaipy.logger import logger
 
@@ -52,6 +52,8 @@ class Model:
     channels: int = settings.CHANNELS
     num_classes: int = settings.NUM_CLASSES
     num_boxes: int = settings.NUM_BOXES
+    batch_size: int = settings.BATCH_SIZE
+    epochs: int = settings.EPOCHS
 
     def __init__(self):
         self.model = self._create_model()
@@ -111,13 +113,11 @@ class Model:
         return model
 
     def train(self) -> None:
-        BATCH_SIZE = 32
-
         train_data = DataGenerator(
-            batch_size=BATCH_SIZE, cutoff_start=0, cutoff_end=0.09
+            batch_size=self.batch_size, cutoff_start=0, cutoff_end=0.09
         )
         val_data = DataGenerator(
-            batch_size=BATCH_SIZE, cutoff_start=0.09, cutoff_end=0.10
+            batch_size=self.batch_size, cutoff_start=0.09, cutoff_end=0.10
         )
 
         self.model.compile(
@@ -125,19 +125,36 @@ class Model:
             loss=tf.keras.losses.MeanSquaredError(),
             metrics=[tf.keras.metrics.MeanSquaredError()],
         )
+
+        model_name = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         self.model.fit(
             train_data,
             validation_data=val_data,
-            batch_size=BATCH_SIZE,
-            epochs=5,
+            batch_size=self.batch_size,
+            epochs=self.epochs,
             verbose=1,
             callbacks=[
                 tf.keras.callbacks.TensorBoard(
-                    log_dir=f"./logs/{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}",
+                    log_dir=f"./logs/{model_name}",
                     histogram_freq=1,
                 ),
             ],
         )
+        self.model.save(f"./models/{model_name}.h5")
+
+    def test(self) -> None:
+        test_data = DataGenerator(batch_size=4, cutoff_start=0.10, cutoff_end=0.11)
+        X, Y_true = test_data[0]
+        Y_pred = self.model.predict(X, verbose=1)
+        for idx in range(4):
+            x = X[idx]
+            y_true = Y_true[idx]
+            y_pred = Y_pred[idx]
+
+            img = utils.tensor_to_image(x)
+            img = utils.draw_bounding_boxes(img, y_pred, pred=True)
+            img = utils.draw_bounding_boxes(img, y_true)
+            img.show()
 
     def predict(self, batch: tf.Tensor) -> tf.Tensor:
-        return self.model.predict(batch, verbose=0)
+        return self.model.predict(batch, verbose=1)

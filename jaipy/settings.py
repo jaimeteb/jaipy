@@ -15,3 +15,8 @@ NUM_BOXES: int = 5
 GRID: int = 7
 
 SEED: int = 42
+
+BATCH_SIZE: int = 64
+EPOCHS: int = 5
+
+PREDICTION_THRESHOLD: float = 0.01

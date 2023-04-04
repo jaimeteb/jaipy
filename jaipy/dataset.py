@@ -72,6 +72,9 @@ def get_dataset_labels() -> DatasetLabels:
     return labels
 
 
+DATASET_LABELS: DatasetLabels = get_dataset_labels()
+
+
 class DataGenerator(Sequence):
     def __init__(
         self,
@@ -81,7 +84,7 @@ class DataGenerator(Sequence):
     ):
         self.batch_size: int = batch_size
 
-        self.labels: DatasetLabels = get_dataset_labels()
+        self.labels: DatasetLabels = DATASET_LABELS
         self.category_indices: t.Dict[int, int] = self._get_category_indices()
 
         self.images_dict: t.Dict[int, DatasetImages] = {
