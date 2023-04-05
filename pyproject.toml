@@ -31,6 +31,10 @@ optional = true
 tensorflow-macos = "^2.11.0"
 
 # linters
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.2.2"
+
 [tool.isort]
 profile = "black"
 
