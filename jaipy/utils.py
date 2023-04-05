@@ -14,12 +14,12 @@ COLORS = [
     "cyan",
     "green",
     "salmon",
-    "yellow",
+    "orange",
     "darkblue",
     "darkcyan",
     "darkgreen",
     "darksalmon",
-    "darkyellow",
+    "darkorange",
 ]
 
 

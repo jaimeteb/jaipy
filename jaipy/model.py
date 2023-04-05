@@ -114,10 +114,14 @@ class Model:
 
     def train(self) -> None:
         train_data = DataGenerator(
-            batch_size=self.batch_size, cutoff_start=0, cutoff_end=0.09
+            batch_size=self.batch_size,
+            cutoff_start=settings.TRAIN_CUTOFF_START,
+            cutoff_end=settings.TRAIN_CUTOFF_END,
         )
         val_data = DataGenerator(
-            batch_size=self.batch_size, cutoff_start=0.09, cutoff_end=0.10
+            batch_size=self.batch_size,
+            cutoff_start=settings.VAL_CUTOFF_START,
+            cutoff_end=settings.VAL_CUTOFF_END,
         )
 
         self.model.compile(
@@ -143,10 +147,14 @@ class Model:
         self.model.save(f"./models/{model_name}.h5")
 
     def test(self) -> None:
-        test_data = DataGenerator(batch_size=4, cutoff_start=0.10, cutoff_end=0.11)
+        test_data = DataGenerator(
+            batch_size=settings.TEST_BATCH_SIZE,
+            cutoff_start=settings.TEST_CUTOFF_START,
+            cutoff_end=settings.TEST_CUTOFF_END,
+        )
         X, Y_true = test_data[0]
         Y_pred = self.model.predict(X, verbose=1)
-        for idx in range(4):
+        for idx in range(settings.TEST_BATCH_SIZE):
             x = X[idx]
             y_true = Y_true[idx]
             y_pred = Y_pred[idx]
