@@ -2,7 +2,6 @@
 Loss function for model training.
 """
 
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras.losses import Loss  # pyright: reportMissingImports=false
 
@@ -13,13 +12,14 @@ def xywh_to_boxes(xywh: tf.Tensor) -> tf.Tensor:
     """
     Convert bounding box coordinates from (x, y, w, h) to (x1, y1, x2, y2).
     """
-    arr = np.array(xywh)
-    x, y, w, h = arr[:, :, 0, :], arr[:, :, 1, :], arr[:, :, 2, :], arr[:, :, 3, :]
-    arr[:, :, 0, :] = x - w / 2  # x1
-    arr[:, :, 1, :] = y - h / 2  # y1
-    arr[:, :, 2, :] = x + w / 2  # x2
-    arr[:, :, 3, :] = y + h / 2  # y2
-    return tf.convert_to_tensor(arr)
+    [x, y, w, h] = [xywh[:, :, i, :] for i in range(4)]
+
+    x1 = x - w / 2
+    y1 = y - h / 2
+    x2 = x + w / 2
+    y2 = y + h / 2
+
+    return tf.stack([x1, y1, x2, y2], axis=2)
 
 
 class YOLOLikeLoss(Loss):
