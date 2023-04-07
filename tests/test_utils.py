@@ -2,19 +2,14 @@
 Unit tests for the utils module.
 """
 
-import numpy as np
-import tensorflow as tf
-from PIL import Image
-
-from jaipy import settings, utils
+from jaipy import utils
+from tests.testres import mock_data
 
 
 def test_draw_bounding_boxes():
-    zeros = np.zeros((7, 7, 5, 5))
-    zeros[3, 3, :, 0] = np.array([1, 0.5, 0.5, 0.5, 0.5])
-    tensor = tf.convert_to_tensor(zeros)
+    tensor = mock_data.get_mock_tensor_one_box_one_class()
+    image = mock_data.get_empty_image()
 
-    image = Image.new("RGB", (settings.INPUT_SIZE, settings.INPUT_SIZE))
     image_true = utils.draw_bounding_boxes(image, tensor)
     image_pred = utils.draw_bounding_boxes(image, tensor, pred=True)
 
