@@ -136,42 +136,17 @@ class DataGenerator(Sequence):
         Y = []
         for idx in indices:
             img = self.images_dict[idx]
-            img_data = load_img(
-                os.path.join(settings.EXPORT_DIR, "data", img.file_name)
+
+            X.append(tf.convert_to_tensor(convert_image_to_yolo_like_tensor(img=img)))
+            Y.append(
+                tf.convert_to_tensor(
+                    convert_annotations_to_yolo_like_tensor(
+                        anns=self.image_annotations_dict[img.id],
+                        img=img,
+                        category_indices=self.category_indices,
+                    )
+                )
             )
-            img_data = tf.image.resize(
-                img_data, (settings.INPUT_SIZE, settings.INPUT_SIZE)
-            )
-            X.append(img_to_array(img_data) / 255)
-
-            # (settings.GRID, settings.GRID, 5, settings.NUM_CLASSES + settings.NUM_BOXES)
-            y_shape = (settings.GRID, settings.GRID, 5, settings.NUM_CLASSES)
-            Y_temp = np.zeros(y_shape)
-
-            # if img.id in self.image_annotations_dict:
-            for ann in self.image_annotations_dict[img.id]:
-                if ann.category_id in self.category_indices:
-                    x = ann.bbox[0] + ann.bbox[2] / 2
-                    y = ann.bbox[1] + ann.bbox[3] / 2
-                    w = ann.bbox[2]
-                    h = ann.bbox[3]
-                    x /= img.width
-                    y /= img.height
-                    w /= img.width
-                    h /= img.height
-
-                    grid_x = int(x * settings.GRID)
-                    grid_y = int(y * settings.GRID)
-
-                    class_index = self.category_indices[ann.category_id]
-
-                    Y_temp[grid_x, grid_y, 0, class_index] = 1
-                    Y_temp[grid_x, grid_y, 1, class_index] = x
-                    Y_temp[grid_x, grid_y, 2, class_index] = y
-                    Y_temp[grid_x, grid_y, 3, class_index] = w
-                    Y_temp[grid_x, grid_y, 4, class_index] = h
-
-            Y.append(tf.convert_to_tensor(Y_temp))
 
         X_tensor = tf.stack(X)
         Y_tensor = tf.stack(Y)
@@ -179,3 +154,44 @@ class DataGenerator(Sequence):
 
     def on_epoch_end(self):
         self._shuffle_indices()
+
+
+def convert_image_to_yolo_like_tensor(
+    img: DatasetImages,
+) -> tf.Tensor:
+    img_data = load_img(os.path.join(settings.EXPORT_DIR, "data", img.file_name))
+    img_data = tf.image.resize(img_data, (settings.INPUT_SIZE, settings.INPUT_SIZE))
+    return tf.convert_to_tensor(img_to_array(img_data) / 255)
+
+
+def convert_annotations_to_yolo_like_tensor(
+    anns: t.List[DatasetAnnotations],
+    img: DatasetImages,
+    category_indices: t.Dict[int, int],
+) -> tf.Tensor:
+    # (settings.GRID, settings.GRID, 5, settings.NUM_CLASSES + settings.NUM_BOXES)
+    y_shape = (settings.GRID, settings.GRID, 5, settings.NUM_CLASSES)
+    Y_temp = np.zeros(y_shape)
+
+    for ann in anns:
+        if ann.category_id in category_indices:
+            x = (ann.bbox[0] + ann.bbox[2] / 2) / img.width
+            y = (ann.bbox[1] + ann.bbox[3] / 2) / img.height
+            w = (ann.bbox[2]) / img.width
+            h = (ann.bbox[3]) / img.height
+
+            grid_x = int(x * settings.GRID)
+            grid_y = int(y * settings.GRID)
+
+            x = x * settings.GRID - grid_x
+            y = y * settings.GRID - grid_y
+
+            class_index = category_indices[ann.category_id]
+
+            Y_temp[grid_x, grid_y, 0, class_index] = 1
+            Y_temp[grid_x, grid_y, 1, class_index] = x
+            Y_temp[grid_x, grid_y, 2, class_index] = y
+            Y_temp[grid_x, grid_y, 3, class_index] = w
+            Y_temp[grid_x, grid_y, 4, class_index] = h
+
+    return tf.convert_to_tensor(Y_temp)

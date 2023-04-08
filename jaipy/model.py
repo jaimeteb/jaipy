@@ -127,8 +127,8 @@ class Model:
         yolo_like_loss = loss.YOLOLikeLoss()
         self.model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+            # loss=tf.keras.losses.MeanSquaredError(),
             loss=yolo_like_loss,
-            # metrics=[tf.keras.metrics.MeanSquaredError()],
         )
 
         model_name = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
