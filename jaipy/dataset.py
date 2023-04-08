@@ -3,6 +3,7 @@ Image dataset loading and parsing
 """
 # pyright: reportMissingImports=false
 
+import functools
 import os
 import random
 import typing as t
@@ -63,16 +64,50 @@ def generate_dataset_files():
     dataset.delete()
 
 
-def get_dataset_labels() -> DatasetLabels:
+@functools.lru_cache(maxsize=1)
+def get_dataset_labels(mock: bool) -> DatasetLabels:
+    if mock:
+        return DatasetLabels(
+            info={},
+            categories=[
+                DatasetCategories(
+                    id=0,
+                    name="person",
+                    supercategory="person",
+                )
+            ],
+            images=[
+                DatasetImages(
+                    id=0,
+                    file_name="tests/testres/person.jpg",
+                    height=100,
+                    width=100,
+                )
+            ],
+            annotations=[
+                DatasetAnnotations(
+                    id=0,
+                    image_id=0,
+                    category_id=0,
+                    bbox=[0, 0, 100, 100],
+                    area=10000.0,
+                    iscrowd=0,
+                    supercategory="person",
+                )
+            ],
+        )
+
+    file_name = os.path.join(settings.EXPORT_DIR, "labels.json")
+    if not os.path.exists(file_name):
+        logger.warning("Generating dataset labels")
+        generate_dataset_files()
     logger.info("Loading dataset labels")
     labels = parse_file_as(
-        DatasetLabels, os.path.join(settings.EXPORT_DIR, "labels.json")
+        DatasetLabels,
+        file_name,
     )
 
     return labels
-
-
-DATASET_LABELS: DatasetLabels = get_dataset_labels()
 
 
 class DataGenerator(Sequence):
@@ -81,10 +116,11 @@ class DataGenerator(Sequence):
         batch_size: int = 32,
         cutoff_start: float = 0.0,
         cutoff_end: float = 1.0,
+        mock: bool = False,
     ):
-        self.batch_size: int = batch_size
+        self.batch_size: int = batch_size if not mock else 1
 
-        self.labels: DatasetLabels = DATASET_LABELS
+        self.labels: DatasetLabels = get_dataset_labels(mock=mock)
         self.category_indices: t.Dict[int, int] = self._get_category_indices()
 
         self.images_dict: t.Dict[int, DatasetImages] = {

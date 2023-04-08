@@ -45,3 +45,8 @@ disable = "E0401, C0116, C0103, R0914, R0903, C0115"
 [tool.poetry.scripts]
 run = "jaipy.main:main"
 # annotate = "jaipy.main:write_annotations"
+
+[tool.pytest.ini_options]
+filterwarnings = "ignore::DeprecationWarning"
+log_cli_level = "INFO"
+log_cli = true
