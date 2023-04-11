@@ -65,39 +65,8 @@ def generate_dataset_files():
 
 
 @functools.lru_cache(maxsize=1)
-def get_dataset_labels(mock: bool) -> DatasetLabels:
-    if mock:
-        return DatasetLabels(
-            info={},
-            categories=[
-                DatasetCategories(
-                    id=0,
-                    name="person",
-                    supercategory="person",
-                )
-            ],
-            images=[
-                DatasetImages(
-                    id=0,
-                    file_name="tests/testres/person.jpg",
-                    height=100,
-                    width=100,
-                )
-            ],
-            annotations=[
-                DatasetAnnotations(
-                    id=0,
-                    image_id=0,
-                    category_id=0,
-                    bbox=[0, 0, 100, 100],
-                    area=10000.0,
-                    iscrowd=0,
-                    supercategory="person",
-                )
-            ],
-        )
-
-    file_name = os.path.join(settings.EXPORT_DIR, "labels.json")
+def get_dataset_labels(data_dir: str) -> DatasetLabels:
+    file_name = os.path.join(data_dir, "labels.json")
     if not os.path.exists(file_name):
         logger.warning("Generating dataset labels")
         generate_dataset_files()
@@ -116,11 +85,11 @@ class DataGenerator(Sequence):
         batch_size: int = 32,
         cutoff_start: float = 0.0,
         cutoff_end: float = 1.0,
-        mock: bool = False,
+        test: bool = False,
     ):
-        self.batch_size: int = batch_size if not mock else 1
-
-        self.labels: DatasetLabels = get_dataset_labels(mock=mock)
+        self.batch_size: int = batch_size if not test else 1
+        self.data_dir: str = settings.EXPORT_DIR if not test else "./tests/testres"
+        self.labels: DatasetLabels = get_dataset_labels(self.data_dir)
         self.category_indices: t.Dict[int, int] = self._get_category_indices()
 
         self.images_dict: t.Dict[int, DatasetImages] = {
@@ -173,7 +142,14 @@ class DataGenerator(Sequence):
         for idx in indices:
             img = self.images_dict[idx]
 
-            X.append(tf.convert_to_tensor(convert_image_to_yolo_like_tensor(img=img)))
+            X.append(
+                tf.convert_to_tensor(
+                    convert_image_to_yolo_like_tensor(
+                        data_dir=self.data_dir,
+                        img=img,
+                    )
+                )
+            )
             Y.append(
                 tf.convert_to_tensor(
                     convert_annotations_to_yolo_like_tensor(
@@ -193,9 +169,10 @@ class DataGenerator(Sequence):
 
 
 def convert_image_to_yolo_like_tensor(
+    data_dir: str,
     img: DatasetImages,
 ) -> tf.Tensor:
-    img_data = load_img(os.path.join(settings.EXPORT_DIR, "data", img.file_name))
+    img_data = load_img(os.path.join(data_dir, "data", img.file_name))
     img_data = tf.image.resize(img_data, (settings.INPUT_SIZE, settings.INPUT_SIZE))
     return tf.convert_to_tensor(img_to_array(img_data) / 255)
 
