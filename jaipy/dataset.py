@@ -201,10 +201,10 @@ def convert_annotations_to_yolo_like_tensor(
 
             class_index = category_indices[ann.category_id]
 
-            Y_temp[grid_x, grid_y, 0, class_index] = 1
-            Y_temp[grid_x, grid_y, 1, class_index] = x
-            Y_temp[grid_x, grid_y, 2, class_index] = y
-            Y_temp[grid_x, grid_y, 3, class_index] = w
-            Y_temp[grid_x, grid_y, 4, class_index] = h
+            Y_temp[grid_x, grid_y, class_index, 0] = 1
+            Y_temp[grid_x, grid_y, class_index, 1] = x
+            Y_temp[grid_x, grid_y, class_index, 2] = y
+            Y_temp[grid_x, grid_y, class_index, 3] = w
+            Y_temp[grid_x, grid_y, class_index, 4] = h
 
     return tf.convert_to_tensor(Y_temp)

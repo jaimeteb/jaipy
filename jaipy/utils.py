@@ -33,14 +33,14 @@ def draw_bounding_boxes(
     draw = ImageDraw.Draw(image)
     for ci in range(tensor.shape[0]):
         for cj in range(tensor.shape[1]):
-            for idx in range(tensor.shape[3]):
-                if (tensor[ci, cj, 0, idx] == 1 and not pred) or (
-                    tensor[ci, cj, 0, idx] > settings.prediction_threshold and pred
+            for idx in range(tensor.shape[2]):
+                if (tensor[ci, cj, idx, 0] == 1 and not pred) or (
+                    tensor[ci, cj, idx, 0] > settings.prediction_threshold and pred
                 ):
-                    x = (tensor[ci, cj, 1, idx] + ci) * int(image.width / settings.grid)
-                    y = (tensor[ci, cj, 2, idx] + cj) * int(image.width / settings.grid)
-                    w = tensor[ci, cj, 3, idx] * image.width
-                    h = tensor[ci, cj, 4, idx] * image.height
+                    x = (tensor[ci, cj, idx, 1] + ci) * int(image.width / settings.grid)
+                    y = (tensor[ci, cj, idx, 2] + cj) * int(image.width / settings.grid)
+                    w = tensor[ci, cj, idx, 3] * image.width
+                    h = tensor[ci, cj, idx, 4] * image.height
                     box = ((x - w / 2, y - h / 2), (x + w / 2, y + h / 2))
                     color = COLORS[idx] if not pred else COLORS[idx + 5]
                     draw.rectangle(box, outline=color)

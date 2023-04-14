@@ -54,17 +54,17 @@ class YOLOLikeLoss(Loss):
             Y_true = Y_true_batch[i]
             Y_pred = Y_pred_batch[i]
 
-            obj_true = Y_true[:, :, 0, :]
-            x_true = Y_true[:, :, 1, :]
-            y_true = Y_true[:, :, 2, :]
-            w_true = Y_true[:, :, 3, :]
-            h_true = Y_true[:, :, 4, :]
+            obj_true = Y_true[:, :, :, 0]
+            x_true = Y_true[:, :, :, 1]
+            y_true = Y_true[:, :, :, 2]
+            w_true = Y_true[:, :, :, 3]
+            h_true = Y_true[:, :, :, 4]
 
-            obj_pred = Y_pred[:, :, 0, :]
-            x_pred = Y_pred[:, :, 1, :]
-            y_pred = Y_pred[:, :, 2, :]
-            w_pred = Y_pred[:, :, 3, :]
-            h_pred = Y_pred[:, :, 4, :]
+            obj_pred = Y_pred[:, :, :, 0]
+            x_pred = Y_pred[:, :, :, 1]
+            y_pred = Y_pred[:, :, :, 2]
+            w_pred = Y_pred[:, :, :, 3]
+            h_pred = Y_pred[:, :, :, 4]
 
             obj_both_idx = tf.where(tf.logical_and(obj_true > 0, obj_pred > 0))
             noobj_both_idx = tf.where(

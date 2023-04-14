@@ -35,7 +35,7 @@ def get_mock_tensor_one_box_one_class(**kwargs) -> tf.Tensor:
     bounding box in the center of the image
     """
     zeros = np.zeros((7, 7, 5, 5))
-    zeros[3, 3, :, 0] = np.array([1.0, 0.5, 0.5, 0.5, 0.5])
+    zeros[3, 3, 0, :] = np.array([1.0, 0.5, 0.5, 0.5, 0.5])
     tensor = tf.convert_to_tensor(zeros)
     return tensor
 
@@ -47,7 +47,7 @@ def get_mock_tensor_one_box_one_class_v2(**kwargs) -> tf.Tensor:
     bounding box in the center of the image
     """
     zeros = np.zeros((7, 7, 5, 5))
-    zeros[2, 2, :, 0] = np.array([1.0, 0.5, 0.5, 4 / 14, 8 / 14])
+    zeros[2, 2, 0, :] = np.array([1.0, 0.5, 0.5, 4 / 14, 8 / 14])
     tensor = tf.convert_to_tensor(zeros)
     return tensor
 
@@ -59,7 +59,7 @@ def get_mock_tensor_one_box_one_class_v3(**kwargs) -> tf.Tensor:
     bounding box in the center of the image
     """
     zeros = np.zeros((7, 7, 5, 5))
-    zeros[2, 2, :, 0] = np.array([1.0, 0.4, 0.6, 5 / 14, 9 / 14])
+    zeros[2, 2, 0, :] = np.array([1.0, 0.4, 0.6, 5 / 14, 9 / 14])
     tensor = tf.convert_to_tensor(zeros)
     return tensor
 
@@ -72,8 +72,8 @@ def get_mock_tensor_two_boxes_one_class(**kwargs) -> tf.Tensor:
     the center of the image
     """
     zeros = np.zeros((7, 7, 5, 5))
-    zeros[3, 3, :, 0] = np.array([1.0, 0.5, 0.5, 0.5, 0.5])
-    zeros[4, 3, :, 0] = np.array([1.0, 0.4, 0.4, 0.4, 0.4])
+    zeros[3, 3, 0, :] = np.array([1.0, 0.5, 0.5, 0.5, 0.5])
+    zeros[4, 3, 0, :] = np.array([1.0, 0.4, 0.4, 0.4, 0.4])
     tensor = tf.convert_to_tensor(zeros)
     return tensor
 
