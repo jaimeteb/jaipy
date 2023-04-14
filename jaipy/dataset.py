@@ -16,8 +16,8 @@ from pydantic import (  # parse_obj_as,; pylint: disable=no-name-in-module
 )
 from tensorflow.keras.utils import Sequence, img_to_array, load_img
 
-from jaipy import settings
 from jaipy.logger import logger
+from jaipy.settings import settings
 
 
 class DatasetCategories(BaseModel):
@@ -58,9 +58,9 @@ def generate_dataset_files():
         "coco-2017",
         splits=["train", "test", "validation"],
         label_types=["detections"],
-        classes=settings.CLASSES,
+        classes=settings.classes,
     )
-    dataset.export(settings.EXPORT_DIR, fo.types.COCODetectionDataset)
+    dataset.export(settings.export_dir, fo.types.COCODetectionDataset)
     dataset.delete()
 
 
@@ -88,7 +88,7 @@ class DataGenerator(Sequence):
         test: bool = False,
     ):
         self.batch_size: int = batch_size if not test else 1
-        self.data_dir: str = settings.EXPORT_DIR if not test else "./tests/testres"
+        self.data_dir: str = settings.export_dir if not test else "./tests/testres"
         self.labels: DatasetLabels = get_dataset_labels(self.data_dir)
         self.category_indices: t.Dict[int, int] = self._get_category_indices()
 
@@ -105,7 +105,7 @@ class DataGenerator(Sequence):
         category_indices: t.Dict[int, int] = {}
         idx = 0
         for cat in self.labels.categories:
-            if cat.name in settings.CLASSES:
+            if cat.name in settings.classes:
                 category_indices[cat.id] = idx
                 idx += 1
         return category_indices
@@ -173,7 +173,7 @@ def convert_image_to_yolo_like_tensor(
     img: DatasetImages,
 ) -> tf.Tensor:
     img_data = load_img(os.path.join(data_dir, "data", img.file_name))
-    img_data = tf.image.resize(img_data, (settings.INPUT_SIZE, settings.INPUT_SIZE))
+    img_data = tf.image.resize(img_data, (settings.input_size, settings.input_size))
     return tf.convert_to_tensor(img_to_array(img_data) / 255)
 
 
@@ -182,8 +182,8 @@ def convert_annotations_to_yolo_like_tensor(
     img: DatasetImages,
     category_indices: t.Dict[int, int],
 ) -> tf.Tensor:
-    # (settings.GRID, settings.GRID, 5, settings.NUM_CLASSES + settings.NUM_BOXES)
-    y_shape = (settings.GRID, settings.GRID, 5, settings.NUM_CLASSES)
+    # (settings.grid, settings.grid, 5, settings.num_classes + settings.num_boxes)
+    y_shape = (settings.grid, settings.grid, 5, settings.num_classes)
     Y_temp = np.zeros(y_shape)
 
     for ann in anns:
@@ -193,11 +193,11 @@ def convert_annotations_to_yolo_like_tensor(
             w = (ann.bbox[2]) / img.width
             h = (ann.bbox[3]) / img.height
 
-            grid_x = int(x * settings.GRID)
-            grid_y = int(y * settings.GRID)
+            grid_x = int(x * settings.grid)
+            grid_y = int(y * settings.grid)
 
-            x = x * settings.GRID - grid_x
-            y = y * settings.GRID - grid_y
+            x = x * settings.grid - grid_x
+            y = y * settings.grid - grid_y
 
             class_index = category_indices[ann.category_id]
 

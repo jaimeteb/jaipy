@@ -18,9 +18,10 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.regularizers import l2
 
-from jaipy import loss, settings, utils
+from jaipy import loss, utils
 from jaipy.dataset import DataGenerator
 from jaipy.logger import logger
+from jaipy.settings import settings
 
 
 def Convolutional(
@@ -48,12 +49,12 @@ def Convolutional(
 
 
 class Model:
-    input_size: int = settings.INPUT_SIZE
-    channels: int = settings.CHANNELS
-    num_classes: int = settings.NUM_CLASSES
-    num_boxes: int = settings.NUM_BOXES
-    batch_size: int = settings.BATCH_SIZE
-    epochs: int = settings.EPOCHS
+    input_size: int = settings.input_size
+    channels: int = settings.channels
+    num_classes: int = settings.num_classes
+    num_boxes: int = settings.num_boxes
+    batch_size: int = settings.batch_size
+    epochs: int = settings.epochs
 
     def __init__(self):
         self.model = self._create_model()
@@ -115,13 +116,13 @@ class Model:
     def train(self) -> None:
         train_data = DataGenerator(
             batch_size=self.batch_size,
-            cutoff_start=settings.TRAIN_CUTOFF_START,
-            cutoff_end=settings.TRAIN_CUTOFF_END,
+            cutoff_start=settings.train_cutoff_start,
+            cutoff_end=settings.train_cutoff_end,
         )
         val_data = DataGenerator(
             batch_size=self.batch_size,
-            cutoff_start=settings.VAL_CUTOFF_START,
-            cutoff_end=settings.VAL_CUTOFF_END,
+            cutoff_start=settings.val_cutoff_start,
+            cutoff_end=settings.val_cutoff_end,
         )
 
         yolo_like_loss = loss.YOLOLikeLoss()
@@ -149,13 +150,13 @@ class Model:
 
     def test(self) -> None:
         test_data = DataGenerator(
-            batch_size=settings.TEST_BATCH_SIZE,
-            cutoff_start=settings.TEST_CUTOFF_START,
-            cutoff_end=settings.TEST_CUTOFF_END,
+            batch_size=settings.test_batch_size,
+            cutoff_start=settings.test_cutoff_start,
+            cutoff_end=settings.test_cutoff_end,
         )
         X, Y_true = test_data[0]
         Y_pred = self.model.predict(X, verbose=1)
-        for idx in range(settings.TEST_BATCH_SIZE):
+        for idx in range(settings.test_batch_size):
             x = X[idx]
             y_true = Y_true[idx]
             y_pred = Y_pred[idx]

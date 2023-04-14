@@ -8,7 +8,8 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 
-from jaipy import dataset, settings
+from jaipy import dataset
+from jaipy.settings import settings
 
 
 def get_mock_tensor_one_box_one_class() -> tf.Tensor:
@@ -70,7 +71,7 @@ def get_mock_tensor_two_boxes_different_classes() -> tf.Tensor:
 
 
 def get_empty_image() -> Image.Image:
-    return Image.new("RGB", (settings.INPUT_SIZE, settings.INPUT_SIZE))
+    return Image.new("RGB", (settings.input_size, settings.input_size))
 
 
 def get_mock_annotations_image_category_indces() -> (

@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageDraw
 
-from jaipy import settings
+from jaipy.settings import settings
 
 COLORS = [
     "blue",
@@ -35,10 +35,10 @@ def draw_bounding_boxes(
         for cj in range(tensor.shape[1]):
             for idx in range(tensor.shape[3]):
                 if (tensor[ci, cj, 0, idx] == 1 and not pred) or (
-                    tensor[ci, cj, 0, idx] > settings.PREDICTION_THRESHOLD and pred
+                    tensor[ci, cj, 0, idx] > settings.prediction_threshold and pred
                 ):
-                    x = (tensor[ci, cj, 1, idx] + ci) * int(image.width / settings.GRID)
-                    y = (tensor[ci, cj, 2, idx] + cj) * int(image.width / settings.GRID)
+                    x = (tensor[ci, cj, 1, idx] + ci) * int(image.width / settings.grid)
+                    y = (tensor[ci, cj, 2, idx] + cj) * int(image.width / settings.grid)
                     w = tensor[ci, cj, 3, idx] * image.width
                     h = tensor[ci, cj, 4, idx] * image.height
                     box = ((x - w / 2, y - h / 2), (x + w / 2, y + h / 2))

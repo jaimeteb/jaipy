@@ -6,7 +6,7 @@ Loss function for model training.
 import tensorflow as tf
 from tensorflow.keras.losses import Loss  # pyright: reportMissingImports=false
 
-# from jaipy import settings
+# from jaipy.settings import settings
 # from jaipy.logger import logger
 
 # def xywh_to_boxes(tensor: tf.Tensor) -> tf.Tensor:
@@ -20,8 +20,8 @@ from tensorflow.keras.losses import Loss  # pyright: reportMissingImports=false
 #         for cj in range(tensor.shape[1]):
 #             for idx in range(tensor.shape[3]):
 #                 if tensor[ci, cj, 0, idx] > 0:
-#                     x = (tensor[ci, cj, 1, idx] + ci) / settings.GRID
-#                     y = (tensor[ci, cj, 2, idx] + cj) / settings.GRID
+#                     x = (tensor[ci, cj, 1, idx] + ci) / settings.grid
+#                     y = (tensor[ci, cj, 2, idx] + cj) / settings.grid
 #                     w = tensor[ci, cj, 3, idx]
 #                     h = tensor[ci, cj, 4, idx]
 

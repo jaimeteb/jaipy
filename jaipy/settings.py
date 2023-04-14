@@ -4,30 +4,37 @@ General settings
 
 import typing as t
 
-NUM_CLASSES: int = 5
-INPUT_SIZE: int = 224
-CHANNELS: int = 3
+from pydantic import BaseSettings
 
-CLASSES: t.List[str] = ["person", "car", "stop sign", "traffic light", "bicycle"]
-EXPORT_DIR: str = "./.fiftyone/coco-2017"
 
-NUM_BOXES: int = 5
-GRID: int = 7
+class Settings(BaseSettings):
+    num_classes: int = 5
+    input_size: int = 224
+    channels: int = 3
 
-SEED: int = 42
+    classes: t.List[str] = ["person", "car", "stop sign", "traffic light", "bicycle"]
+    export_dir: str = "./.fiftyone/coco-2017"
 
-BATCH_SIZE: int = 64
-EPOCHS: int = 5
+    num_boxes: int = 5
+    grid: int = 7
 
-PREDICTION_THRESHOLD: float = 0.01
+    seed: int = 42
 
-TRAIN_CUTOFF_START: float = 0.000
-TRAIN_CUTOFF_END: float = 0.020
+    batch_size: int = 64
+    epochs: int = 5
 
-VAL_CUTOFF_START: float = 0.020
-VAL_CUTOFF_END: float = 0.025
+    prediction_threshold: float = 0.01
 
-TEST_CUTOFF_START: float = 0.99
-TEST_CUTOFF_END: float = 1.00
+    train_cutoff_start: float = 0.000
+    train_cutoff_end: float = 0.020
 
-TEST_BATCH_SIZE: int = 8
+    val_cutoff_start: float = 0.020
+    val_cutoff_end: float = 0.025
+
+    test_cutoff_start: float = 0.99
+    test_cutoff_end: float = 1.00
+
+    test_batch_size: int = 8
+
+
+settings = Settings()
