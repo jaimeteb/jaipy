@@ -33,6 +33,17 @@ def get_mock_tensor_one_box_one_class_v2() -> tf.Tensor:
     return tensor
 
 
+def get_mock_tensor_one_box_one_class_v3() -> tf.Tensor:
+    """
+    tensor representing a prediction of a single
+    bounding box in the center of the image
+    """
+    zeros = np.zeros((7, 7, 5, 5))
+    zeros[2, 2, :, 0] = np.array([1.0, 0.4, 0.6, 5 / 14, 9 / 14])
+    tensor = tf.convert_to_tensor(zeros)
+    return tensor
+
+
 def get_mock_tensor_two_boxes_one_class() -> tf.Tensor:
     """
     tensor representing a prediction of two
