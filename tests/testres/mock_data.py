@@ -1,3 +1,5 @@
+# pylint: disable=unused-argument
+
 """
 Mock data for testing.
 """
@@ -12,7 +14,22 @@ from jaipy import dataset
 from jaipy.settings import settings
 
 
-def get_mock_tensor_one_box_one_class() -> tf.Tensor:
+def add_dimension(tensor: tf.Tensor) -> tf.Tensor:
+    return tf.expand_dims(tensor, axis=0)
+
+
+def add_dimension_decorator(func: t.Callable) -> t.Callable:
+    def wrapper(*args, **kwargs) -> tf.Tensor:
+        tensor = func(*args, **kwargs)
+        if kwargs.get("add_dimension", False):
+            return add_dimension(tensor)
+        return tensor
+
+    return wrapper
+
+
+@add_dimension_decorator
+def get_mock_tensor_one_box_one_class(**kwargs) -> tf.Tensor:
     """
     tensor representing a prediction of a single
     bounding box in the center of the image
@@ -23,7 +40,8 @@ def get_mock_tensor_one_box_one_class() -> tf.Tensor:
     return tensor
 
 
-def get_mock_tensor_one_box_one_class_v2() -> tf.Tensor:
+@add_dimension_decorator
+def get_mock_tensor_one_box_one_class_v2(**kwargs) -> tf.Tensor:
     """
     tensor representing a prediction of a single
     bounding box in the center of the image
@@ -34,7 +52,8 @@ def get_mock_tensor_one_box_one_class_v2() -> tf.Tensor:
     return tensor
 
 
-def get_mock_tensor_one_box_one_class_v3() -> tf.Tensor:
+@add_dimension_decorator
+def get_mock_tensor_one_box_one_class_v3(**kwargs) -> tf.Tensor:
     """
     tensor representing a prediction of a single
     bounding box in the center of the image
@@ -45,7 +64,8 @@ def get_mock_tensor_one_box_one_class_v3() -> tf.Tensor:
     return tensor
 
 
-def get_mock_tensor_two_boxes_one_class() -> tf.Tensor:
+@add_dimension_decorator
+def get_mock_tensor_two_boxes_one_class(**kwargs) -> tf.Tensor:
     """
     tensor representing a prediction of two
     bounding boxes for the same object class in/near
@@ -58,7 +78,8 @@ def get_mock_tensor_two_boxes_one_class() -> tf.Tensor:
     return tensor
 
 
-def get_mock_tensor_two_boxes_different_classes() -> tf.Tensor:
+@add_dimension_decorator
+def get_mock_tensor_two_boxes_different_classes(**kwargs) -> tf.Tensor:
     """
     tensor representing a prediction of two
     bounding boxes for different classes
