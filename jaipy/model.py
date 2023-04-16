@@ -16,12 +16,16 @@ from tensorflow.keras.layers import (
     MaxPool2D,
     Reshape,
 )
-from tensorflow.keras.regularizers import l2
 
 from jaipy import loss, utils
 from jaipy.dataset import DataGenerator
 from jaipy.logger import logger
 from jaipy.settings import settings
+
+# from tensorflow.keras.regularizers import l2
+
+
+tf.keras.backend.set_floatx("float64")
 
 
 def Convolutional(
@@ -38,7 +42,7 @@ def Convolutional(
         strides=strides,
         padding=padding,
         use_bias=False,
-        kernel_regularizer=l2(0.000_5),
+        # kernel_regularizer=l2(0.000_5),
         kernel_initializer=tf.random_normal_initializer(stddev=0.01),
         bias_initializer=tf.constant_initializer(0.0),
     )(layer)
