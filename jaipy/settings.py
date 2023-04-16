@@ -22,19 +22,20 @@ class Settings(BaseSettings):
 
     batch_size: int = 64
     epochs: int = 5
+    learning_rate: float = 0.000_1
 
     prediction_threshold: float = 0.01
 
-    train_cutoff_start: float = 0.000
-    train_cutoff_end: float = 0.020
+    train_cutoff_start: float = 0.00
+    train_cutoff_end: float = 0.20
 
-    val_cutoff_start: float = 0.020
-    val_cutoff_end: float = 0.025
+    val_cutoff_start: float = 0.20
+    val_cutoff_end: float = 0.25
 
     test_cutoff_start: float = 0.99
     test_cutoff_end: float = 1.00
 
-    test_batch_size: int = 8
+    test_batch_size: int = 16
 
 
 settings = Settings()

@@ -59,6 +59,7 @@ class Model:
     num_boxes: int = settings.num_boxes
     batch_size: int = settings.batch_size
     epochs: int = settings.epochs
+    learning_rate: float = settings.learning_rate
 
     def __init__(self):
         self.model = self._create_model()
@@ -131,7 +132,7 @@ class Model:
 
         yolo_like_loss = loss.YOLOLikeLoss()
         self.model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate),
             # loss=tf.keras.losses.MeanSquaredError(),
             loss=yolo_like_loss,
         )
