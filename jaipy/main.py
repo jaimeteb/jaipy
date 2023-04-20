@@ -2,7 +2,7 @@
 Main module
 """
 
-from jaipy.dataset import DataGenerator
+from jaipy.dataset import DataGenerator, generate_dataset_files
 from jaipy.model import Model
 from jaipy.settings import settings
 
@@ -36,3 +36,7 @@ def train_test_mock():
     dg = DataGenerator(test=True)
     model.train(train_data=dg, val_data=dg, checkpoints=False)
     model.test(test_data=dg, test_batch_size=1)
+
+
+def generate_dataset():
+    generate_dataset_files()
