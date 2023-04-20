@@ -99,16 +99,15 @@ class DataGenerator(Sequence):
             int, t.List[DatasetAnnotations]
         ] = self._get_image_annotations(cutoff_start, cutoff_end)
 
+        logger.info("Loaded %s images", len(self.image_annotations_dict))
         self._shuffle_indices()
 
     def _get_category_indices(self) -> t.Dict[int, int]:
-        category_indices: t.Dict[int, int] = {}
-        idx = 0
-        for cat in self.labels.categories:
-            if cat.name in settings.classes:
-                category_indices[cat.id] = idx
-                idx += 1
-        return category_indices
+        return {
+            cat.id: settings.classes.index(cat.name)
+            for cat in self.labels.categories
+            if cat.name in settings.classes
+        }
 
     def _get_image_annotations(
         self, cutoff_start: float, cutoff_end: float

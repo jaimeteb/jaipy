@@ -30,6 +30,13 @@ optional = true
 [tool.poetry.group.macos.dependencies]
 tensorflow-macos = "^2.11.0"
 
+# gpu tf
+[tool.poetry.group.gpu]
+optional = true
+
+[tool.poetry.group.gpu.dependencies]
+tensorflow-gpu = "^2.11.0"
+
 # linters
 
 [tool.poetry.group.test.dependencies]
@@ -43,8 +50,8 @@ disable = "E0401, C0116, C0103, R0914, R0903, C0115"
 
 # scripts
 [tool.poetry.scripts]
-train = "jaipy.main:main"
-# annotate = "jaipy.main:write_annotations"
+train-test = "jaipy.main:train_test"
+train-test-mock = "jaipy.main:train_test_mock"
 
 [tool.pytest.ini_options]
 filterwarnings = "ignore::DeprecationWarning"

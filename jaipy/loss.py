@@ -9,6 +9,8 @@ import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras.losses import Loss  # pyright: reportMissingImports=false
 
+from jaipy import utils
+
 # from jaipy.settings import settings
 
 # def xywh_to_boxes(tensor: tf.Tensor) -> tf.Tensor:
@@ -65,21 +67,25 @@ class YOLOLikeLoss(Loss):
         Y_true_batch: tf.Tensor,
         Y_pred_batch: tf.Tensor,
     ) -> float:
-        obj_true, x_true, y_true, w_true, h_true = get_obj_x_y_w_h(Y_true_batch)
-        obj_pred, x_pred, y_pred, w_pred, h_pred = get_obj_x_y_w_h(Y_pred_batch)
+        with utils.device:
+            obj_true, x_true, y_true, w_true, h_true = get_obj_x_y_w_h(Y_true_batch)
+            obj_pred, x_pred, y_pred, w_pred, h_pred = get_obj_x_y_w_h(Y_pred_batch)
 
-        xy_diff = K.square(x_true - x_pred) + K.square(y_true - y_pred)
+            obj_in_cell = tf.where(obj_true == 1)
+            no_obj_in_cell = tf.where(obj_true == 0)
 
-        wh_diff = K.square(K.sqrt(w_true) - K.sqrt(w_pred)) + K.square(
-            K.sqrt(h_true) - K.sqrt(h_pred)
-        )
+            xy_diff = K.square(x_true - x_pred) + K.square(y_true - y_pred)
 
-        obj_diff = K.square(obj_true - obj_pred)
+            wh_diff = K.square(K.sqrt(w_true) - K.sqrt(w_pred)) + K.square(
+                K.sqrt(h_true) - K.sqrt(h_pred)
+            )
 
-        loss = (
-            self.lambda_coord * tf.reduce_sum(xy_diff)
-            + self.lambda_coord * tf.reduce_sum(wh_diff)
-            + tf.reduce_sum(obj_diff)
-        )
+            obj_diff = K.square(obj_true - obj_pred)
 
-        return loss
+            return (
+                self.lambda_coord * tf.reduce_sum(tf.gather_nd(xy_diff, obj_in_cell))
+                + self.lambda_coord * tf.reduce_sum(tf.gather_nd(wh_diff, obj_in_cell))
+                + tf.reduce_sum(tf.gather_nd(obj_diff, obj_in_cell))
+                + self.lambda_noobj
+                * tf.reduce_sum(tf.gather_nd(obj_diff, no_obj_in_cell))
+            )

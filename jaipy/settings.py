@@ -9,7 +9,7 @@ from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     num_classes: int = 5
-    input_size: int = 224
+    input_size: int = 224 * 2
     channels: int = 3
 
     classes: t.List[str] = ["person", "car", "stop sign", "traffic light", "bicycle"]
@@ -22,18 +22,18 @@ class Settings(BaseSettings):
 
     batch_size: int = 64
     epochs: int = 5
-    learning_rate: float = 0.000_1
+    learning_rate: float = 0.001
 
-    prediction_threshold: float = 0.01
+    prediction_threshold: float = 0.000_1
 
     train_cutoff_start: float = 0.00
-    train_cutoff_end: float = 0.20
+    train_cutoff_end: float = 0.01
 
-    val_cutoff_start: float = 0.20
-    val_cutoff_end: float = 0.25
+    val_cutoff_start: float = 0.01
+    val_cutoff_end: float = 0.02
 
-    test_cutoff_start: float = 0.99
-    test_cutoff_end: float = 1.00
+    test_cutoff_start: float = 0.998
+    test_cutoff_end: float = 0.999
 
     test_batch_size: int = 16
 

@@ -21,12 +21,12 @@
             "image_id": 0,
             "category_id": 0,
             "bbox": [
-                0,
-                0,
-                100,
-                100
+                20,
+                20,
+                60,
+                60
             ],
-            "area": 10000.0,
+            "area": 0.0,
             "iscrowd": 0,
             "supercategory": "person"
         }

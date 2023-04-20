@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageDraw
 
+from jaipy.logger import logger
 from jaipy.settings import settings
 
 COLORS = [
@@ -21,6 +22,14 @@ COLORS = [
     "darksalmon",
     "darkorange",
 ]
+
+is_gpu = tf.config.list_physical_devices("GPU")
+if is_gpu:
+    logger.info("GPU available.")
+    device = tf.device("/gpu:0")
+else:
+    logger.info("GPU not available.")
+    device = tf.device("/cpu:0")
 
 
 def tensor_to_image(tensor: tf.Tensor) -> Image.Image:
@@ -42,7 +51,14 @@ def draw_bounding_boxes(
                     w = tensor[ci, cj, idx, 3] * image.width
                     h = tensor[ci, cj, idx, 4] * image.height
                     box = ((x - w / 2, y - h / 2), (x + w / 2, y + h / 2))
+
                     color = COLORS[idx] if not pred else COLORS[idx + 5]
                     draw.rectangle(box, outline=color)
+                    text = (
+                        f"{settings.classes[idx]}"
+                        if not pred
+                        else f"{settings.classes[idx]}: {tensor[ci, cj, idx, 0]:.2f}"
+                    )
+                    draw.text((x - w / 2, y - h / 2), text, fill=color)
 
     return image

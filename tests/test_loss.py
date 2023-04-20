@@ -3,6 +3,7 @@ Test loss function.
 """
 
 from jaipy import loss
+from jaipy.logger import logger
 from tests.testres import mock_data
 
 
@@ -12,4 +13,6 @@ def test_loss():
 
     yolo_like_loss = loss.YOLOLikeLoss()
     loss_value = yolo_like_loss(y_true, y_pred)
+
+    logger.info("loss_value=%s", loss_value)
     assert loss_value > 0.0
