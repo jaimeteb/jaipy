@@ -4,6 +4,7 @@ Convolutional Neural Network model definition
 # pyright: reportMissingImports=false
 
 import datetime as dt
+import json
 import typing as t
 
 import tensorflow as tf
@@ -33,10 +34,10 @@ def Convolutional(  # pylint: disable=too-many-arguments
     filters: int,
     kernel_size: int,
     strides: int = 1,
-    batch_norm: bool = True,
     padding: str = "same",
 ):
     layer = Conv2D(
+        activation=None,
         filters=filters,
         kernel_size=kernel_size,
         strides=strides,
@@ -46,22 +47,10 @@ def Convolutional(  # pylint: disable=too-many-arguments
         kernel_initializer=tf.random_normal_initializer(stddev=0.01),
         bias_initializer=tf.constant_initializer(0.0),
     )(layer)
-    layer = BatchNormalization()(layer) if batch_norm else layer
+    layer = BatchNormalization()(layer)
     layer = LeakyReLU(alpha=0.1)(layer)
 
     return layer
-
-
-def MaxPooling(
-    pool_size: int,
-    strides: int,
-    padding: str,
-):
-    return MaxPool2D(
-        pool_size=pool_size,
-        strides=strides,
-        padding=padding,
-    )
 
 
 class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
@@ -88,55 +77,45 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         self.model = self._create_model()
 
     def _create_model(self) -> tf.keras.Model:
+        file_name = settings.architecture_file
+        with open(file_name, "r", encoding="utf-8") as file:
+            architecture = json.load(file)
+
         input_layer = Input([self.input_size, self.input_size, self.channels])
 
-        # Darknet-like architecture
-        layer = Convolutional(input_layer, 64, 7, 2)
-        layer = MaxPooling(2, 2, "same")(layer)
-
-        layer = Convolutional(layer, 192, 3)
-        layer = MaxPooling(2, 2, "same")(layer)
-
-        layer = Convolutional(layer, 128, 1)
-        layer = Convolutional(layer, 256, 3)
-        layer = Convolutional(layer, 256, 1)
-        layer = Convolutional(layer, 512, 3)
-        layer = MaxPooling(2, 2, "same")(layer)
-
-        layer = Convolutional(layer, 256, 1)  #
-        layer = Convolutional(layer, 512, 3)
-        # layer = Convolutional(layer, 256, 1)
-        # layer = Convolutional(layer, 512, 3)
-        # layer = Convolutional(layer, 256, 1)
-        # layer = Convolutional(layer, 512, 3)
-        # layer = Convolutional(layer, 256, 1)
-        # layer = Convolutional(layer, 512, 3)  #
-        layer = Convolutional(layer, 512, 1)
-        layer = Convolutional(layer, 1024, 3)
-        layer = MaxPooling(2, 2, "same")(layer)
-
-        layer = Convolutional(layer, 512, 1)  #
-        layer = Convolutional(layer, 1024, 3)
-        # layer = Convolutional(layer, 512, 1)
-        # layer = Convolutional(layer, 1024, 3)  #
-        layer = Convolutional(layer, 1024, 3)
-        layer = Convolutional(layer, 1024, 3, 2)
-
-        layer = Convolutional(layer, 1024, 3)
-        layer = Convolutional(layer, 1024, 3)
-
-        # Fully connected layers
+        layer = input_layer
+        for spec in architecture.get("darknet", [{}]):
+            if spec.get("type") == "convolutional":
+                layer = Convolutional(
+                    layer,
+                    spec.get("filters"),
+                    spec.get("kernel_size"),
+                    spec.get("strides", 1),
+                    spec.get("padding", "same"),
+                )
+            elif spec.get("type") == "maxpool":
+                layer = MaxPool2D(
+                    spec.get("pool_size"),
+                    spec.get("strides"),
+                    spec.get("padding", "same"),
+                )(layer)
         layer = Flatten()(layer)
-        layer = Dense(4096, activation=LeakyReLU(alpha=0.1))(layer)
-        layer = Dropout(rate=0.5)(layer)
-        layer = Dense(
-            self.grid * self.grid * 5 * self.num_classes,
-            activation=LeakyReLU(alpha=0.1),
-        )(layer)
-        final_layer = Reshape((self.grid, self.grid, 5, self.num_classes))(layer)
+        for spec in architecture.get("fully_connected", [{}]):
+            if spec.get("type") == "dense":
+                layer = Dense(
+                    spec.get("units")
+                    if not spec.get("final", False)
+                    else self.grid**2 * 5 * self.num_classes,
+                    activation=LeakyReLU(alpha=0.1)
+                    if spec.get("activation", "leaky_relu") == "leaky_relu"
+                    else "linear",
+                )(layer)
+            elif spec.get("type") == "dropout":
+                layer = Dropout(spec.get("rate"))(layer)
 
-        # Create model
-        model = tf.keras.Model(input_layer, final_layer)
+        layer = Reshape((self.grid, self.grid, 5, self.num_classes))(layer)
+
+        model = tf.keras.Model(input_layer, layer)
         model.summary(print_fn=logger.info)
 
         return model

@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     classes: t.List[str] = ["person", "car", "stop sign", "traffic light", "bicycle"]
     export_dir: str = "./.fiftyone/coco-2017"
 
+    architecture_file: str = "./architecture/original.json"
     num_boxes: int = 5
     grid: int = 7
 

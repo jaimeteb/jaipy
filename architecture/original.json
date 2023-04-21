@@ -1,0 +1,161 @@
+{
+    "darknet": [
+        {
+            "type": "convolutional",
+            "filters": 64,
+            "kernel_size": 7,
+            "strides": 2
+        },
+        {
+            "type": "maxpool",
+            "pool_size": 2,
+            "strides": 2
+        },
+        {
+            "type": "convolutional",
+            "filters": 192,
+            "kernel_size": 3
+        },
+        {
+            "type": "maxpool",
+            "pool_size": 2,
+            "strides": 2
+        },
+        {
+            "type": "convolutional",
+            "filters": 128,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 256,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 256,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 512,
+            "kernel_size": 3
+        },
+        {
+            "type": "maxpool",
+            "pool_size": 2,
+            "strides": 2
+        },
+        {
+            "type": "convolutional",
+            "filters": 256,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 512,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 256,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 512,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 256,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 512,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 256,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 512,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 512,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 1024,
+            "kernel_size": 3
+        },
+        {
+            "type": "maxpool",
+            "pool_size": 2,
+            "strides": 2
+        },
+        {
+            "type": "convolutional",
+            "filters": 512,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 1024,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 512,
+            "kernel_size": 1
+        },
+        {
+            "type": "convolutional",
+            "filters": 1024,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 1024,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 1024,
+            "kernel_size": 3,
+            "strides": 2
+        },
+        {
+            "type": "convolutional",
+            "filters": 1024,
+            "kernel_size": 3
+        },
+        {
+            "type": "convolutional",
+            "filters": 1024,
+            "kernel_size": 3
+        }
+    ],
+    "fully_connected": [
+        {
+            "type": "dense",
+            "units": 4096,
+            "activation": "leaky_relu"
+        },
+        {
+            "type": "dropout",
+            "rate": 0.5
+        },
+        {
+            "type": "dense",
+            "final": true
+        }
+    ]
+}
