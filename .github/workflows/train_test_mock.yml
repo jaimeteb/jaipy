@@ -29,4 +29,4 @@ jobs:
           poetry install --with=ubuntu
       - name: train test mock
         run: |
-          poetry run train-test-mock
+          ARCHITECTURE_FILE=./architecture/tiny.json poetry run train-test-mock
