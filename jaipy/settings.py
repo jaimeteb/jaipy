@@ -9,7 +9,7 @@ from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     num_classes: int = 5
-    input_size: int = 224 * 2
+    input_size: int = 448
     channels: int = 3
 
     classes: t.List[str] = ["person", "car", "stop sign", "traffic light", "bicycle"]
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
 
     seed: int = 42
 
-    batch_size: int = 64
+    batch_size: int = 8
     epochs: int = 5
     learning_rate: float = 0.001
 

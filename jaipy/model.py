@@ -8,9 +8,11 @@ import typing as t
 
 import tensorflow as tf
 from tensorflow.keras.layers import (
-    Activation,
     BatchNormalization,
     Conv2D,
+    Dense,
+    Dropout,
+    Flatten,
     Input,
     LeakyReLU,
     MaxPool2D,
@@ -30,7 +32,6 @@ def Convolutional(  # pylint: disable=too-many-arguments
     layer: t.Any,
     filters: int,
     kernel_size: int,
-    idx: int,
     strides: int = 1,
     batch_norm: bool = True,
     padding: str = "same",
@@ -44,14 +45,9 @@ def Convolutional(  # pylint: disable=too-many-arguments
         kernel_regularizer=l2(0.000_5),
         kernel_initializer=tf.random_normal_initializer(stddev=0.01),
         bias_initializer=tf.constant_initializer(0.0),
-        name=f"convolutional_2d_{idx}",
     )(layer)
-    layer = (
-        BatchNormalization(name=f"batch_normalization_{idx}")(layer)
-        if batch_norm
-        else layer
-    )
-    layer = LeakyReLU(alpha=0.1, name=f"leaky_relu_{idx}")(layer)
+    layer = BatchNormalization()(layer) if batch_norm else layer
+    layer = LeakyReLU(alpha=0.1)(layer)
 
     return layer
 
@@ -60,13 +56,11 @@ def MaxPooling(
     pool_size: int,
     strides: int,
     padding: str,
-    idx: int,
 ):
     return MaxPool2D(
         pool_size=pool_size,
         strides=strides,
         padding=padding,
-        name=f"maxpool_2d_{idx}",
     )
 
 
@@ -80,6 +74,7 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         batch_size: int = settings.batch_size,
         epochs: int = settings.epochs,
         learning_rate: float = settings.learning_rate,
+        grid: int = settings.grid,
     ):
         self.input_size = input_size
         self.channels = channels
@@ -88,6 +83,7 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         self.batch_size = batch_size
         self.epochs = epochs
         self.learning_rate = learning_rate
+        self.grid = grid
 
         self.model = self._create_model()
 
@@ -95,26 +91,49 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         input_layer = Input([self.input_size, self.input_size, self.channels])
 
         # Darknet-like architecture
-        layer = Convolutional(input_layer, 32, 3, idx=1)
-        layer = MaxPooling(2, 2, "same", idx=1)(layer)
-        layer = Convolutional(layer, 64, 3, idx=2)
-        layer = MaxPooling(2, 2, "same", idx=2)(layer)
-        layer = Convolutional(layer, 128, 3, idx=3)
-        layer = MaxPooling(2, 2, "same", idx=3)(layer)
-        layer = Convolutional(layer, 256, 3, idx=4)
-        layer = MaxPooling(2, 2, "same", idx=4)(layer)
-        layer = Convolutional(layer, 512, 3, idx=5)
-        layer = MaxPooling(2, 2, "same", idx=5)(layer)
-        layer = Convolutional(layer, 1024, 3, idx=6)
-        layer = MaxPooling(2, 2, "same", idx=6)(layer)
-        # layer = Convolutional(layer, 1024, 3, idx=7)
+        layer = Convolutional(input_layer, 64, 7, 2)
+        layer = MaxPooling(2, 2, "same")(layer)
 
-        # Head
-        layer = Conv2D(5 * (self.num_classes), 1, name="conv_2d_head")(layer)
-        layer = Activation("linear", name="linear_activation")(layer)
+        layer = Convolutional(layer, 192, 3)
+        layer = MaxPooling(2, 2, "same")(layer)
 
-        shape = layer.shape
-        final_layer = Reshape((shape[1], shape[2], 5, self.num_classes))(layer)
+        layer = Convolutional(layer, 128, 1)
+        layer = Convolutional(layer, 256, 3)
+        layer = Convolutional(layer, 256, 1)
+        layer = Convolutional(layer, 512, 3)
+        layer = MaxPooling(2, 2, "same")(layer)
+
+        layer = Convolutional(layer, 256, 1)  #
+        layer = Convolutional(layer, 512, 3)
+        # layer = Convolutional(layer, 256, 1)
+        # layer = Convolutional(layer, 512, 3)
+        # layer = Convolutional(layer, 256, 1)
+        # layer = Convolutional(layer, 512, 3)
+        # layer = Convolutional(layer, 256, 1)
+        # layer = Convolutional(layer, 512, 3)  #
+        layer = Convolutional(layer, 512, 1)
+        layer = Convolutional(layer, 1024, 3)
+        layer = MaxPooling(2, 2, "same")(layer)
+
+        layer = Convolutional(layer, 512, 1)  #
+        layer = Convolutional(layer, 1024, 3)
+        # layer = Convolutional(layer, 512, 1)
+        # layer = Convolutional(layer, 1024, 3)  #
+        layer = Convolutional(layer, 1024, 3)
+        layer = Convolutional(layer, 1024, 3, 2)
+
+        layer = Convolutional(layer, 1024, 3)
+        layer = Convolutional(layer, 1024, 3)
+
+        # Fully connected layers
+        layer = Flatten()(layer)
+        layer = Dense(4096, activation=LeakyReLU(alpha=0.1))(layer)
+        layer = Dropout(rate=0.5)(layer)
+        layer = Dense(
+            self.grid * self.grid * 5 * self.num_classes,
+            activation=LeakyReLU(alpha=0.1),
+        )(layer)
+        final_layer = Reshape((self.grid, self.grid, 5, self.num_classes))(layer)
 
         # Create model
         model = tf.keras.Model(input_layer, final_layer)
