@@ -30,6 +30,19 @@ def train_test():
     )
 
 
+def test():
+    if settings.weights_file is not None:
+        model = Model()
+        model.load_weights(settings.weights_file)
+        model.test(
+            test_data=DataGenerator(
+                batch_size=settings.test_batch_size,
+                cutoff_start=settings.test_cutoff_start,
+                cutoff_end=settings.test_cutoff_end,
+            )
+        )
+
+
 def train_test_mock():
     model = Model(batch_size=1)
 

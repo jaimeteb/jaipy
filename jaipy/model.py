@@ -182,5 +182,5 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
     def predict(self, batch: tf.Tensor) -> tf.Tensor:
         return self.model.predict(batch, verbose=1)
 
-    def _load_weights(self, path: str) -> None:
+    def load_weights(self, path: str) -> None:
         self.model.load_weights(path)
