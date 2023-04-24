@@ -142,20 +142,22 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
                     log_dir=f"./logs/{model_name}",
                     histogram_freq=1,
                 ),
-                ImagePredictionCallback(
-                    model_name=model_name,
-                    test_data=val_data,
-                    test_batch_size=settings.test_batch_size,
-                ),
             ]
 
             if checkpoints:
-                callbacks.append(
-                    tf.keras.callbacks.ModelCheckpoint(
-                        filepath=f"./models/{model_name}" + "-{epoch:02d}.h5",
-                        save_best_only=False,
-                        save_weights_only=True,
-                    )
+                callbacks.extend(
+                    [
+                        tf.keras.callbacks.ModelCheckpoint(
+                            filepath=f"./models/{model_name}" + "-{epoch:02d}.h5",
+                            save_best_only=False,
+                            save_weights_only=True,
+                        ),
+                        ImagePredictionCallback(
+                            model_name=model_name,
+                            test_data=val_data,
+                            test_batch_size=settings.test_batch_size,
+                        ),
+                    ]
                 )
 
             self.model.fit(
