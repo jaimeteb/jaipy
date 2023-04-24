@@ -3,6 +3,7 @@ Custom raining callbacks
 """
 import io
 
+import mlflow
 import tensorflow as tf
 
 from jaipy import utils
@@ -35,3 +36,12 @@ class ImagePredictionCallback(tf.keras.callbacks.Callback):
                 img_bytes.close()
 
                 tf.summary.image(f"sample-{idx}", tf_image, step=epoch)
+
+
+class MLFlowCallback(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):  # pylint: disable=dangerous-default-value
+        mlflow.log_metric("train_loss", logs["loss"], epoch)
+        mlflow.log_metric("val_loss", logs["val_loss"], epoch)
+
+    def on_train_end(self, logs=None):
+        mlflow.end_run()

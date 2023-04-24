@@ -7,6 +7,7 @@ import datetime as dt
 import json
 import typing as t
 
+import mlflow
 import tensorflow as tf
 from tensorflow.keras.layers import (
     BatchNormalization,
@@ -22,7 +23,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.regularizers import l2
 
 from jaipy import loss, utils
-from jaipy.callbacks import ImagePredictionCallback
+from jaipy.callbacks import ImagePredictionCallback, MLFlowCallback
 from jaipy.dataset import DataGenerator
 from jaipy.logger import logger
 from jaipy.settings import settings
@@ -127,48 +128,53 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         val_data: DataGenerator,
         checkpoints: bool = True,
     ) -> None:
-        with utils.device:
-            yolo_like_loss = loss.YOLOLikeLoss()
-            self.model.compile(
-                optimizer=tf.keras.optimizers.Adam(learning_rate=self.learning_rate),
-                # loss=tf.keras.losses.MeanSquaredError(),
-                loss=yolo_like_loss,
-            )
-
-            model_name = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-
-            callbacks = [
-                tf.keras.callbacks.TensorBoard(
-                    log_dir=f"./logs/{model_name}",
-                    histogram_freq=1,
-                ),
-            ]
-
-            if checkpoints:
-                callbacks.extend(
-                    [
-                        tf.keras.callbacks.ModelCheckpoint(
-                            filepath=f"./models/{model_name}" + "-{epoch:02d}.h5",
-                            save_best_only=False,
-                            save_weights_only=True,
-                        ),
-                        ImagePredictionCallback(
-                            model_name=model_name,
-                            test_data=val_data,
-                            test_batch_size=settings.test_batch_size,
-                        ),
-                    ]
+        model_name = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+        with mlflow.start_run(run_name=model_name):
+            mlflow.log_params(params=settings.dict())
+            mlflow.run_name = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+            with utils.device:
+                yolo_like_loss = loss.YOLOLikeLoss()
+                self.model.compile(
+                    optimizer=tf.keras.optimizers.Adam(
+                        learning_rate=self.learning_rate
+                    ),
+                    # loss=tf.keras.losses.MeanSquaredError(),
+                    loss=yolo_like_loss,
                 )
 
-            self.model.fit(
-                train_data,
-                validation_data=val_data,
-                batch_size=self.batch_size,
-                epochs=self.epochs,
-                verbose=1,
-                callbacks=callbacks,
-            )
-            self.model.save(f"./models/{model_name}.h5")
+                callbacks = [
+                    tf.keras.callbacks.TensorBoard(
+                        log_dir=f"./logs/{model_name}",
+                        histogram_freq=1,
+                    ),
+                ]
+
+                if checkpoints:
+                    callbacks.extend(
+                        [
+                            tf.keras.callbacks.ModelCheckpoint(
+                                filepath=f"./models/{model_name}" + "-{epoch:02d}.h5",
+                                save_best_only=False,
+                                save_weights_only=True,
+                            ),
+                            ImagePredictionCallback(
+                                model_name=model_name,
+                                test_data=val_data,
+                                test_batch_size=settings.test_batch_size,
+                            ),
+                            MLFlowCallback(),
+                        ]
+                    )
+
+                self.model.fit(
+                    train_data,
+                    validation_data=val_data,
+                    batch_size=self.batch_size,
+                    epochs=self.epochs,
+                    verbose=1,
+                    callbacks=callbacks,
+                )
+                self.model.save(f"./models/{model_name}.h5")
 
     def test(
         self,
