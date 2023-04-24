@@ -7,6 +7,23 @@ from jaipy.model import Model
 from jaipy.settings import settings
 
 
+def train():
+    model = Model()
+    model.train(
+        train_data=DataGenerator(
+            batch_size=settings.batch_size,
+            cutoff_start=settings.train_cutoff_start,
+            cutoff_end=settings.train_cutoff_end,
+        ),
+        val_data=DataGenerator(
+            batch_size=settings.batch_size,
+            cutoff_start=settings.val_cutoff_start,
+            cutoff_end=settings.val_cutoff_end,
+            shuffle=False,
+        ),
+    )
+
+
 def train_test():
     model = Model()
     model.train(

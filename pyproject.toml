@@ -41,6 +41,7 @@ disable = "E0401, C0116, C0103, R0914, R0903, C0115"
 
 # scripts
 [tool.poetry.scripts]
+train = "jaipy.main:train"
 train-test = "jaipy.main:train_test"
 test = "jaipy.main:test"
 train-test-mock = "jaipy.main:train_test_mock"
