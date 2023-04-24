@@ -30,15 +30,6 @@ optional = true
 [tool.poetry.group.macos.dependencies]
 tensorflow-macos = "^2.11.0"
 
-# # gpu tf
-# [tool.poetry.group.gpu]
-# optional = true
-
-# [tool.poetry.group.gpu.dependencies]
-# tensorflow-gpu = "^2.11.0"
-
-# linters
-
 [tool.poetry.group.test.dependencies]
 pytest = "^7.2.2"
 
