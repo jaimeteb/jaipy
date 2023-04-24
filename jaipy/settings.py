@@ -27,11 +27,11 @@ class Settings(BaseSettings):
 
     prediction_threshold: float = 0.2
 
-    train_cutoff_start: float = 0.00
-    train_cutoff_end: float = 0.01
+    train_cutoff_start: float = 0.000
+    train_cutoff_end: float = 0.001
 
-    val_cutoff_start: float = 0.01
-    val_cutoff_end: float = 0.02
+    val_cutoff_start: float = 0.001
+    val_cutoff_end: float = 0.002
 
     test_cutoff_start: float = 0.998
     test_cutoff_end: float = 0.999

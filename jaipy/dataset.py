@@ -80,12 +80,13 @@ def get_dataset_labels(data_dir: str) -> DatasetLabels:
 
 
 class DataGenerator(Sequence):
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         batch_size: int = 32,
         cutoff_start: float = 0.0,
         cutoff_end: float = 1.0,
         test: bool = False,
+        shuffle: bool = True,
     ):
         self.batch_size: int = batch_size if not test else 1
         self.data_dir: str = settings.export_dir if not test else "./tests/testres"
@@ -100,7 +101,7 @@ class DataGenerator(Sequence):
         ] = self._get_image_annotations(cutoff_start, cutoff_end)
 
         logger.info("Loaded %s images", len(self.image_annotations_dict))
-        self._shuffle_indices()
+        self._shuffle_indices(shuffle)
 
     def _get_category_indices(self) -> t.Dict[int, int]:
         return {
@@ -127,9 +128,10 @@ class DataGenerator(Sequence):
 
         return image_annotations
 
-    def _shuffle_indices(self):
+    def _shuffle_indices(self, shuffle: bool = True):
         self.indices = list(self.image_annotations_dict.keys()).copy()
-        random.shuffle(self.indices)
+        if shuffle:
+            random.shuffle(self.indices)
 
     def __len__(self):
         return len(self.image_annotations_dict) // self.batch_size

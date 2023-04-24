@@ -22,6 +22,7 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.regularizers import l2
 
 from jaipy import loss, utils
+from jaipy.callbacks import ImagePredictionCallback
 from jaipy.dataset import DataGenerator
 from jaipy.logger import logger
 from jaipy.settings import settings
@@ -140,7 +141,12 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
                 tf.keras.callbacks.TensorBoard(
                     log_dir=f"./logs/{model_name}",
                     histogram_freq=1,
-                )
+                ),
+                ImagePredictionCallback(
+                    model_name=model_name,
+                    test_data=val_data,
+                    test_batch_size=settings.test_batch_size,
+                ),
             ]
 
             if checkpoints:
@@ -170,13 +176,7 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         X, Y_true = test_data[0]
         Y_pred = self.model.predict(X, verbose=1)
         for idx in range(test_batch_size):
-            x = X[idx]
-            y_true = Y_true[idx]
-            y_pred = Y_pred[idx]
-
-            img = utils.tensor_to_image(x)
-            img = utils.draw_bounding_boxes(img, y_pred, pred=True)
-            img = utils.draw_bounding_boxes(img, y_true)
+            img = utils.draw_prediction_and_truth(X[idx], Y_pred[idx], Y_true[idx])
             img.show()
 
     def predict(self, batch: tf.Tensor) -> tf.Tensor:

@@ -19,6 +19,7 @@ def train_test():
             batch_size=settings.batch_size,
             cutoff_start=settings.val_cutoff_start,
             cutoff_end=settings.val_cutoff_end,
+            shuffle=False,
         ),
     )
     model.test(
@@ -26,6 +27,7 @@ def train_test():
             batch_size=settings.test_batch_size,
             cutoff_start=settings.test_cutoff_start,
             cutoff_end=settings.test_cutoff_end,
+            shuffle=False,
         )
     )
 

@@ -62,3 +62,12 @@ def draw_bounding_boxes(
                     draw.text((x - w / 2, y - h / 2), text, fill=color)
 
     return image
+
+
+def draw_prediction_and_truth(
+    x: tf.Tensor, y_pred: tf.Tensor, y_true: tf.Tensor
+) -> Image.Image:
+    img = tensor_to_image(x)
+    img = draw_bounding_boxes(img, y_pred, pred=True)
+    img = draw_bounding_boxes(img, y_true)
+    return img
