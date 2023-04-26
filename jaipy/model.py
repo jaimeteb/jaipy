@@ -181,14 +181,43 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         test_data: DataGenerator,
         test_batch_size: int = settings.test_batch_size,
     ) -> None:
-        X, Y_true = test_data[0]
-        Y_pred = self.model.predict(X, verbose=1)
+        with utils.device:
+            X, Y_true = test_data[0]
+            Y_pred = self.model.predict(X, verbose=1)
         for idx in range(test_batch_size):
             img = utils.draw_prediction_and_truth(X[idx], Y_pred[idx], Y_true[idx])
             img.show()
 
-    def predict(self, batch: tf.Tensor) -> tf.Tensor:
-        return self.model.predict(batch, verbose=1)
+    def predict(self, X: tf.Tensor, nms: bool = False) -> t.Optional[tf.Tensor]:
+        with utils.device:
+            if not nms:
+                return self.model.predict(X, verbose=1)
+
+            Y_pred = self.model.predict(X, verbose=1).astype("float32")
+
+            obj_pred = Y_pred[..., 0]
+            boxes_pred = utils.xywh_to_boxes(Y_pred)
+
+            boxes_tensor = tf.reshape(
+                boxes_pred,
+                shape=(-1, settings.grid * settings.grid, settings.num_classes, 4),
+            )
+            scores_tensor = tf.reshape(
+                obj_pred,
+                shape=(-1, settings.grid * settings.grid, settings.num_classes),
+            )
+            boxes, scores, classes, nums = tf.image.combined_non_max_suppression(
+                boxes_tensor,
+                scores_tensor,
+                max_output_size_per_class=settings.grid**2,
+                max_total_size=settings.grid**2,
+                iou_threshold=0.5,
+                score_threshold=settings.prediction_threshold,
+            )
+
+            imgs = utils.draw_predictions(X, boxes, scores, classes, nums)
+            _ = [img.show() for img in imgs]
+            return None
 
     def load_weights(self, path: str) -> None:
         self.model.load_weights(path)

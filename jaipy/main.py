@@ -58,8 +58,24 @@ def test():
                 batch_size=settings.test_batch_size,
                 cutoff_start=settings.test_cutoff_start,
                 cutoff_end=settings.test_cutoff_end,
+                shuffle=False,
             )
         )
+
+
+def predict():
+    if settings.weights_file is not None:
+        model = Model()
+        model.load_weights(settings.weights_file)
+
+        test_data = DataGenerator(
+            batch_size=settings.test_batch_size,
+            cutoff_start=settings.test_cutoff_start,
+            cutoff_end=settings.test_cutoff_end,
+            shuffle=False,
+        )
+        X, _ = test_data[0]
+        model.predict(X, nms=True)
 
 
 def train_test_mock():

@@ -38,7 +38,8 @@ class Settings(BaseSettings):
 
     test_batch_size: int = 16
 
-    weights_file: t.Optional[str] = None
+    weights_file: t.Optional[str] = "./models/gpu/20230421-202354-07.h5"
+    checkpoint_file: t.Optional[str] = None
 
 
 settings = Settings()

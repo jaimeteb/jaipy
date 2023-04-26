@@ -183,7 +183,6 @@ def convert_annotations_to_yolo_like_tensor(
     img: DatasetImages,
     category_indices: t.Dict[int, int],
 ) -> tf.Tensor:
-    # (settings.grid, settings.grid, 5, settings.num_classes + settings.num_boxes)
     y_shape = (settings.grid, settings.grid, 5, settings.num_classes)
     Y_temp = np.zeros(y_shape)
 

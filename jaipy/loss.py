@@ -1,61 +1,11 @@
 """
 Loss function for model training.
 """
-
-import typing as t
-
-# import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras.losses import Loss  # pyright: reportMissingImports=false
 
 from jaipy import utils
-
-# from jaipy.settings import settings
-
-# def xywh_to_boxes(tensor: tf.Tensor) -> tf.Tensor:
-#     """
-#     Convert bounding box coordinates from (x, y, w, h) to (x1, y1, x2, y2).
-#     """
-
-#     arr = np.zeros_like(tensor)
-
-#     for ci in range(tensor.shape[0]):
-#         for cj in range(tensor.shape[1]):
-#             for idx in range(tensor.shape[3]):
-#                 if tensor[ci, cj, 0, idx] > 0:
-#                     x = (tensor[ci, cj, 1, idx] + ci) / settings.grid
-#                     y = (tensor[ci, cj, 2, idx] + cj) / settings.grid
-#                     w = tensor[ci, cj, 3, idx]
-#                     h = tensor[ci, cj, 4, idx]
-
-#                     x1 = x - w / 2
-#                     y1 = y - h / 2
-#                     x2 = x + w / 2
-#                     y2 = y + h / 2
-
-#                     arr[ci, cj, 1, idx] = x1
-#                     arr[ci, cj, 2, idx] = y1
-#                     arr[ci, cj, 3, idx] = x2
-#                     arr[ci, cj, 4, idx] = y2
-
-#     return tf.convert_to_tensor(arr)[:, :, 1:, :]
-
-
-def get_obj_x_y_w_h(
-    tensor: tf.Tensor,
-) -> t.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
-    """
-    Get object, x, y, w, h from tensor.
-    """
-
-    obj = tensor[..., 0]
-    x = tensor[..., 1]
-    y = tensor[..., 2]
-    w = tensor[..., 3]
-    h = tensor[..., 4]
-
-    return obj, x, y, w, h
 
 
 class YOLOLikeLoss(Loss):
@@ -68,8 +18,12 @@ class YOLOLikeLoss(Loss):
         Y_pred_batch: tf.Tensor,
     ) -> float:
         with utils.device:
-            obj_true, x_true, y_true, w_true, h_true = get_obj_x_y_w_h(Y_true_batch)
-            obj_pred, x_pred, y_pred, w_pred, h_pred = get_obj_x_y_w_h(Y_pred_batch)
+            obj_true, x_true, y_true, w_true, h_true = utils.get_obj_x_y_w_h(
+                Y_true_batch
+            )
+            obj_pred, x_pred, y_pred, w_pred, h_pred = utils.get_obj_x_y_w_h(
+                Y_pred_batch
+            )
 
             obj_in_cell = tf.where(obj_true == 1)
             no_obj_in_cell = tf.where(obj_true == 0)
