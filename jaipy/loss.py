@@ -36,10 +36,16 @@ class YOLOLikeLoss(Loss):
 
             obj_diff = K.square(obj_true - obj_pred)
 
+            class_pred_true = tf.nn.softmax(obj_true, axis=-1)
+            class_pred_pred = tf.nn.softmax(obj_pred, axis=-1)
+
+            class_diff = K.square(class_pred_true - class_pred_pred)
+
             return (
                 self.lambda_coord * tf.reduce_sum(tf.gather_nd(xy_diff, obj_in_cell))
                 + self.lambda_coord * tf.reduce_sum(tf.gather_nd(wh_diff, obj_in_cell))
                 + tf.reduce_sum(tf.gather_nd(obj_diff, obj_in_cell))
                 + self.lambda_noobj
                 * tf.reduce_sum(tf.gather_nd(obj_diff, no_obj_in_cell))
+                + tf.reduce_sum(tf.gather_nd(class_diff, obj_in_cell))
             )
