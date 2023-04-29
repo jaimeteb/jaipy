@@ -118,7 +118,8 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         layer = Reshape((self.grid, self.grid, 5, self.num_classes))(layer)
 
         model = tf.keras.Model(input_layer, layer)
-        model.summary(print_fn=logger.info)
+        # model.summary(print_fn=logger.info)
+        logger.info("Created model according to architecture file %s", file_name)
 
         return model
 
@@ -129,6 +130,7 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         checkpoints: bool = True,
     ) -> None:
         model_name = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+        logger.info("Starting training for %s", model_name)
         with mlflow.start_run(run_name=model_name):
             mlflow.log_params(params=settings.dict())
             mlflow.run_name = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -165,6 +167,9 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
                             MLFlowCallback(),
                         ]
                     )
+                if settings.checkpoint_file is not None:
+                    logger.info("Loading weights from %s", settings.checkpoint_file)
+                    self.model.load_weights(settings.checkpoint_file)
 
                 self.model.fit(
                     train_data,
@@ -181,6 +186,7 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
         test_data: DataGenerator,
         test_batch_size: int = settings.test_batch_size,
     ) -> None:
+        logger.info("Starting testing")
         with utils.device:
             X, Y_true = test_data[0]
             Y_pred = self.model.predict(X, verbose=1)
