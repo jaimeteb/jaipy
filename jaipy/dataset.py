@@ -1,3 +1,5 @@
+# pylint: disable=no-member
+
 """
 Image dataset loading and parsing
 """
@@ -8,6 +10,7 @@ import os
 import random
 import typing as t
 
+import cv2
 import numpy as np
 import tensorflow as tf
 from pydantic import (  # parse_obj_as,; pylint: disable=no-name-in-module
@@ -176,6 +179,16 @@ def convert_image_to_yolo_like_tensor(
     img_data = load_img(os.path.join(data_dir, "data", img.file_name))
     img_data = tf.image.resize(img_data, (settings.input_size, settings.input_size))
     return tf.convert_to_tensor(img_to_array(img_data) / 255)
+
+
+def convert_cv2_image_to_yolo_like_tensor(
+    img: np.ndarray,
+) -> tf.Tensor:
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (settings.input_size, settings.input_size))
+    img = img.astype(np.float32) / 255.0
+    img = np.expand_dims(img, axis=0)
+    return tf.convert_to_tensor(img)
 
 
 def convert_annotations_to_yolo_like_tensor(

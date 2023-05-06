@@ -1,8 +1,16 @@
+# pylint: disable=no-member
+
 """
 Main module
 """
 
-from jaipy.dataset import DataGenerator, generate_dataset_files
+import time
+
+from jaipy.dataset import (
+    DataGenerator,
+    convert_cv2_image_to_yolo_like_tensor,
+    generate_dataset_files,
+)
 from jaipy.model import Model
 from jaipy.settings import settings
 
@@ -76,6 +84,47 @@ def predict():
         )
         X, _ = test_data[0]
         model.predict(X, nms=True)
+
+
+def live_predict():
+    if settings.weights_file is not None:
+        import cv2  # pylint: disable=import-outside-toplevel
+        import numpy as np  # pylint: disable=import-outside-toplevel
+
+        model = Model()
+        model.load_weights(settings.weights_file)
+
+        cap = cv2.VideoCapture(0)
+        total_time = 0.0
+        num_predictions = 0
+        while True:
+            ret, image = cap.read()
+            if not ret:
+                break
+
+            start_time = time.monotonic()
+            image = convert_cv2_image_to_yolo_like_tensor(image)
+            image_pred = model.predict(image, nms=True, show=False)[0]  # type: ignore
+            end_time = time.monotonic()
+
+            total_time += end_time - start_time
+            num_predictions += 1
+
+            cv2.imshow(
+                "Object Detection",
+                cv2.cvtColor(np.array(image_pred), cv2.COLOR_BGR2RGB),
+            )
+
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
+
+        avg_time = total_time / num_predictions
+        print(f"Number of predictions: {num_predictions}")
+        print(f"Total time: {total_time:.3f} seconds")
+        print(f"Average time per prediction: {avg_time:.3f} seconds")
 
 
 def train_test_mock():

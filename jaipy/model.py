@@ -194,7 +194,7 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
             img = utils.draw_prediction_and_truth(X[idx], Y_pred[idx], Y_true[idx])
             img.show()
 
-    def predict(self, X: tf.Tensor, nms: bool = False) -> t.Optional[tf.Tensor]:
+    def predict(self, X: tf.Tensor, nms: bool = False, show: bool = True):
         with utils.device:
             if not nms:
                 return self.model.predict(X, verbose=1)
@@ -217,13 +217,15 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
                 scores_tensor,
                 max_output_size_per_class=settings.grid**2,
                 max_total_size=settings.grid**2,
-                iou_threshold=0.5,
+                iou_threshold=settings.iou_threshold,
                 score_threshold=settings.prediction_threshold,
             )
 
             imgs = utils.draw_predictions(X, boxes, scores, classes, nums)
-            _ = [img.show() for img in imgs]
-            return None
+            if show:
+                _ = [img.show() for img in imgs]
+                return None
+            return imgs
 
     def load_weights(self, path: str) -> None:
         self.model.load_weights(path)

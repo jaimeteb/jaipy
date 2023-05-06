@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     epochs: int = 5
     learning_rate: float = 0.001
 
+    iou_threshold: float = 0.5
     prediction_threshold: float = 0.2
 
     train_cutoff_start: float = 0.000
@@ -38,7 +39,7 @@ class Settings(BaseSettings):
 
     test_batch_size: int = 16
 
-    weights_file: t.Optional[str] = None  # "./models/gpu/20230421-202354-07.h5"
+    weights_file: t.Optional[str] = None  # "./models/gpu/20230501-160735-19.h5"
     checkpoint_file: t.Optional[str] = None
 
 
