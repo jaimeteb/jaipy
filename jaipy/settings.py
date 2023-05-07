@@ -13,7 +13,10 @@ class Settings(BaseSettings):
     channels: int = 3
 
     classes: t.List[str] = ["person", "car", "stop sign", "traffic light", "bicycle"]
+    dataset_name: str = "coco-2017"
     export_dir: str = "./.fiftyone/coco-2017"
+    test_dataset_name: str = "voc-2007"
+    test_export_dir: str = "./.fiftyone/voc-2007"
 
     architecture_file: str = "./architecture/tiny.json"
     num_boxes: int = 5

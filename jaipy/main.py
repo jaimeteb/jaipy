@@ -10,6 +10,7 @@ from jaipy.dataset import (
     DataGenerator,
     convert_cv2_image_to_yolo_like_tensor,
     generate_dataset_files,
+    generate_test_dataset_files,
 )
 from jaipy.model import Model
 from jaipy.settings import settings
@@ -86,6 +87,22 @@ def predict():
         model.predict(X, nms=True)
 
 
+def evaluate():
+    if settings.weights_file is not None:
+        model = Model()
+        model.load_weights(settings.weights_file)
+
+        test_data = DataGenerator(
+            batch_size=settings.test_batch_size,
+            cutoff_start=settings.test_cutoff_start,
+            cutoff_end=settings.test_cutoff_end,
+            shuffle=False,
+            evalualte=True,
+        )
+        X, Y_true = test_data[0]
+        model.predict_and_evaluate(X, Y_true)
+
+
 def live_predict():
     if settings.weights_file is not None:
         import cv2  # pylint: disable=import-outside-toplevel
@@ -137,3 +154,7 @@ def train_test_mock():
 
 def generate_dataset():
     generate_dataset_files()
+
+
+def generate_test_dataset():
+    generate_test_dataset_files()

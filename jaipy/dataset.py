@@ -26,7 +26,7 @@ from jaipy.settings import settings
 class DatasetCategories(BaseModel):
     id: int
     name: str
-    supercategory: str
+    supercategory: t.Optional[str]
 
 
 class DatasetImages(BaseModel):
@@ -43,7 +43,7 @@ class DatasetAnnotations(BaseModel):
     bbox: t.List[int]
     area: float
     iscrowd: int
-    supercategory: str
+    supercategory: t.Optional[str]
 
 
 class DatasetLabels(BaseModel):
@@ -58,12 +58,26 @@ def generate_dataset_files():
     import fiftyone.zoo as foz  # pylint: disable=import-outside-toplevel
 
     dataset = foz.load_zoo_dataset(
-        "coco-2017",
+        settings.dataset_name,
         splits=["train", "test", "validation"],
         label_types=["detections"],
         classes=settings.classes,
     )
     dataset.export(settings.export_dir, fo.types.COCODetectionDataset)
+    dataset.delete()
+
+
+def generate_test_dataset_files():
+    import fiftyone as fo  # pylint: disable=import-outside-toplevel
+    import fiftyone.zoo as foz  # pylint: disable=import-outside-toplevel
+
+    dataset = foz.load_zoo_dataset(
+        settings.test_dataset_name,
+        splits=["train", "validation"],
+        label_types=["detections"],
+        classes=settings.classes,
+    )
+    dataset.export(settings.test_export_dir, fo.types.COCODetectionDataset)
     dataset.delete()
 
 
@@ -90,9 +104,15 @@ class DataGenerator(Sequence):
         cutoff_end: float = 1.0,
         test: bool = False,
         shuffle: bool = True,
+        evalualte: bool = False,
     ):
         self.batch_size: int = batch_size if not test else 1
-        self.data_dir: str = settings.export_dir if not test else "./tests/testres"
+        if test:
+            self.data_dir: str = "./tests/testres"
+        elif evalualte:
+            self.data_dir: str = settings.test_export_dir
+        else:
+            self.data_dir: str = settings.export_dir
         self.labels: DatasetLabels = get_dataset_labels(self.data_dir)
         self.category_indices: t.Dict[int, int] = self._get_category_indices()
 

@@ -144,3 +144,37 @@ def xywh_to_boxes(tensor: tf.Tensor) -> tf.Tensor:
 
     boxes_pred = tf.stack([y1, x1, y2, x2], axis=-1)
     return boxes_pred
+
+
+def iou(box1, box2):
+    # convert y1, x1, y2, x2 to x1, y1, x2, y2
+    box1 = tf.stack([box1[1], box1[0], box1[3], box1[2]])
+    box2 = tf.stack([box2[:, 1], box2[:, 0], box2[:, 3], box2[:, 2]], axis=1)
+
+    # Compute the intersection of the boxes
+    xmin = tf.maximum(box1[0], box2[:, 0])
+    ymin = tf.maximum(box1[1], box2[:, 1])
+    xmax = tf.minimum(box1[2], box2[:, 2])
+    ymax = tf.minimum(box1[3], box2[:, 3])
+    w = tf.maximum(xmax - xmin, 0)
+    h = tf.maximum(ymax - ymin, 0)
+    intersection = w * h
+
+    # Compute the area of box1 and each box in box2
+    area1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
+    area2 = (box2[:, 2] - box2[:, 0]) * (box2[:, 3] - box2[:, 1])
+
+    # Compute the union of the boxes
+    union = area1 + area2 - intersection
+
+    # Compute the IoU
+    return intersection / tf.maximum(union, 1e-8)
+
+
+def average_precision(precision, recall):
+    # Compute the area under the precision-recall curve using the trapezoidal rule
+    m_precision = np.concatenate(([0], precision, [0]))
+    m_recall = np.concatenate(([0], recall, [1]))
+    ap = np.trapz(m_precision, m_recall)
+
+    return ap

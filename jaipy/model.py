@@ -8,6 +8,7 @@ import json
 import typing as t
 
 import mlflow
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.layers import (
     BatchNormalization,
@@ -201,25 +202,7 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
 
             Y_pred = self.model.predict(X, verbose=1).astype("float32")
 
-            obj_pred = Y_pred[..., 0]
-            boxes_pred = utils.xywh_to_boxes(Y_pred)
-
-            boxes_tensor = tf.reshape(
-                boxes_pred,
-                shape=(-1, settings.grid * settings.grid, settings.num_classes, 4),
-            )
-            scores_tensor = tf.reshape(
-                obj_pred,
-                shape=(-1, settings.grid * settings.grid, settings.num_classes),
-            )
-            boxes, scores, classes, nums = tf.image.combined_non_max_suppression(
-                boxes_tensor,
-                scores_tensor,
-                max_output_size_per_class=settings.grid**2,
-                max_total_size=settings.grid**2,
-                iou_threshold=settings.iou_threshold,
-                score_threshold=settings.prediction_threshold,
-            )
+            boxes, scores, classes, nums = _boxes_scores_classes_nums(Y_pred)
 
             imgs = utils.draw_predictions(X, boxes, scores, classes, nums)
             if show:
@@ -227,5 +210,85 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
                 return None
             return imgs
 
+    def predict_and_evaluate(
+        self,
+        X: tf.Tensor,
+        Y_true: tf.Tensor,
+    ):
+        with utils.device:
+            Y_pred = self.model.predict(X, verbose=1).astype("float32")
+            Y_true = Y_true.numpy().astype("float32")
+
+            boxes_p, scores_p, classes_p, nums_p = _boxes_scores_classes_nums(Y_pred)
+            boxes_t, scores_t, classes_t, nums_t = _boxes_scores_classes_nums(
+                Y_true, nms=False
+            )
+
+            average_precisions = []
+            for img_idx in range(X.shape[0]):
+                valid_p = nums_p.numpy()[img_idx]
+                valid_t = nums_t.numpy()[img_idx]
+
+                bp = boxes_p[img_idx, :valid_p, :]
+                sp = scores_p[img_idx, :valid_p]
+                cp = classes_p[img_idx, :valid_p]
+
+                bt = boxes_t[img_idx, :valid_t, :]
+                st = scores_t[img_idx, :valid_t]
+                ct = classes_t[img_idx, :valid_t]
+
+                for class_idx in np.unique(classes_t):
+                    _bp = bp[cp == class_idx]
+                    _sp = sp[cp == class_idx]
+                    _bt = bt[ct == class_idx]
+                    _st = st[ct == class_idx]
+
+                    tps = np.zeros(valid_p)
+                    fps = np.zeros(valid_p)
+
+                    for idx, (box_p, _) in enumerate(zip(_bp, _sp)):
+                        ious = utils.iou(box_p, _bt)
+                        ious = tf.where(ious > settings.iou_threshold, 1, 0)
+                        if tf.reduce_sum(ious) == 0:
+                            fps[idx] = 1
+                        else:
+                            tps[idx] = 1
+                    tps = np.cumsum(tps)
+                    fps = np.cumsum(fps)
+                    precision = tps / (tps + fps + 1e-8)
+                    recall = tps / (valid_t + 1e-8)
+                    average_precisions.append(
+                        utils.average_precision(precision, recall)
+                    )
+
+            mean_average_precision = np.mean(average_precisions)
+            logger.info("mAP: %s", mean_average_precision)
+
     def load_weights(self, path: str) -> None:
         self.model.load_weights(path)
+
+
+def _boxes_scores_classes_nums(
+    Y_pred: tf.Tensor,
+    nms: bool = True,
+) -> t.Tuple[tf.Tensor, tf.Tensor, tf.Tensor, tf.Tensor]:
+    obj_pred = Y_pred[..., 0]
+    boxes_pred = utils.xywh_to_boxes(Y_pred)
+
+    boxes_tensor = tf.reshape(
+        boxes_pred,
+        shape=(-1, settings.grid * settings.grid, settings.num_classes, 4),
+    )
+    scores_tensor = tf.reshape(
+        obj_pred,
+        shape=(-1, settings.grid * settings.grid, settings.num_classes),
+    )
+    boxes, scores, classes, nums = tf.image.combined_non_max_suppression(
+        boxes_tensor,
+        scores_tensor,
+        max_output_size_per_class=settings.grid**2,
+        max_total_size=settings.grid**2,
+        iou_threshold=settings.iou_threshold if nms else 0,
+        score_threshold=settings.prediction_threshold if nms else 0,
+    )
+    return boxes, scores, classes, nums

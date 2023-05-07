@@ -49,6 +49,8 @@ train-test-mock = "jaipy.main:train_test_mock"
 generate-dataset = "jaipy.main:generate_dataset"
 predict = "jaipy.main:predict"
 live-predict = "jaipy.main:live_predict"
+generate-test-dataset = "jaipy.main:generate_test_dataset"
+evaluate = "jaipy.main:evaluate"
 
 [tool.pytest.ini_options]
 filterwarnings = "ignore::DeprecationWarning"
