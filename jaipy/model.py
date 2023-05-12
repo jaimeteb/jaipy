@@ -224,7 +224,14 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
                 Y_true, nms=False
             )
 
+            # imgs_p = utils.draw_predictions(X, boxes_p, scores_p, classes_p, nums_p)
+            # imgs_t = utils.draw_predictions(X, boxes_t, scores_t, classes_t, nums_t)
+            # for img_p, img_t in zip(imgs_p, imgs_t):
+            #     img_p.show()
+            #     img_t.show()
+
             average_precisions = []
+            average_precisions_dict = {}
             for img_idx in range(X.shape[0]):
                 valid_p = nums_p.numpy()[img_idx]
                 valid_t = nums_t.numpy()[img_idx]
@@ -257,12 +264,15 @@ class Model:  # pylint: disable=too-many-arguments,too-many-instance-attributes
                     fps = np.cumsum(fps)
                     precision = tps / (tps + fps + 1e-8)
                     recall = tps / (valid_t + 1e-8)
-                    average_precisions.append(
-                        utils.average_precision(precision, recall)
-                    )
+                    ap = utils.average_precision(precision, recall)
+                    average_precisions.append(ap)
+                    average_precisions_dict.setdefault(class_idx, []).append(ap)
 
             mean_average_precision = np.mean(average_precisions)
             logger.info("mAP: %s", mean_average_precision)
+
+            for class_idx, aps in average_precisions_dict.items():
+                logger.info("class: %s, AP: %s", class_idx, np.mean(aps))
 
     def load_weights(self, path: str) -> None:
         self.model.load_weights(path)
@@ -283,12 +293,58 @@ def _boxes_scores_classes_nums(
         obj_pred,
         shape=(-1, settings.grid * settings.grid, settings.num_classes),
     )
-    boxes, scores, classes, nums = tf.image.combined_non_max_suppression(
-        boxes_tensor,
-        scores_tensor,
-        max_output_size_per_class=settings.grid**2,
-        max_total_size=settings.grid**2,
-        iou_threshold=settings.iou_threshold if nms else 0,
-        score_threshold=settings.prediction_threshold if nms else 0,
-    )
+    if nms:
+        boxes, scores, classes, nums = tf.image.combined_non_max_suppression(
+            boxes_tensor,
+            scores_tensor,
+            max_output_size_per_class=settings.grid**2,
+            max_total_size=settings.grid**2,
+            iou_threshold=settings.iou_threshold,
+            score_threshold=settings.prediction_threshold,
+        )
+    else:
+        all_boxes = []
+        all_scores = []
+        all_classes = []
+        all_nums = []
+        for img_idx in range(Y_pred.shape[0]):
+            boxes = boxes_pred[img_idx][obj_pred[img_idx] == 1]
+            scores = obj_pred[img_idx][obj_pred[img_idx] == 1]
+            nums = len(boxes)
+
+            mask = tf.reduce_any(scores_tensor[img_idx] != [0, 0, 0, 0, 0], axis=-1)
+            classes = tf.argmax(scores_tensor[img_idx], axis=-1)
+            classes = tf.gather_nd(classes, tf.where(mask))
+
+            # fill boxes
+            input_tensor = boxes
+            output_shape = (49, 4)
+            num_rows_to_add_end = output_shape[0] - tf.shape(input_tensor)[0]
+            paddings = tf.stack([[0, num_rows_to_add_end], [0, 0]])
+            boxes = tf.pad(input_tensor, paddings, "CONSTANT")
+
+            # fill scores
+            input_tensor = scores
+            output_shape = (49,)
+            num_rows_to_add_end = output_shape[0] - tf.shape(input_tensor)[0]
+            paddings = tf.stack([[0, num_rows_to_add_end]])
+            scores = tf.pad(input_tensor, paddings, "CONSTANT")
+
+            # fill classes
+            input_tensor = classes
+            output_shape = (49,)
+            num_rows_to_add_end = output_shape[0] - tf.shape(input_tensor)[0]
+            paddings = tf.stack([[0, num_rows_to_add_end]])
+            classes = tf.pad(input_tensor, paddings, "CONSTANT")
+
+            all_boxes.append(boxes)
+            all_scores.append(scores)
+            all_classes.append(classes)
+            all_nums.append(nums)
+
+        boxes = tf.stack(all_boxes)
+        scores = tf.stack(all_scores)
+        classes = tf.stack(all_classes)
+        nums = tf.stack(all_nums)
+
     return boxes, scores, classes, nums

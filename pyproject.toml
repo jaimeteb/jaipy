@@ -51,6 +51,7 @@ predict = "jaipy.main:predict"
 live-predict = "jaipy.main:live_predict"
 generate-test-dataset = "jaipy.main:generate_test_dataset"
 evaluate = "jaipy.main:evaluate"
+predict-images = "jaipy.main:predict_images"
 
 [tool.pytest.ini_options]
 filterwarnings = "ignore::DeprecationWarning"

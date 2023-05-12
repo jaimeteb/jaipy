@@ -45,5 +45,7 @@ class Settings(BaseSettings):
     weights_file: t.Optional[str] = None  # "./models/gpu/20230501-160735-19.h5"
     checkpoint_file: t.Optional[str] = None
 
+    images_dir: str = "./images"
+
 
 settings = Settings()

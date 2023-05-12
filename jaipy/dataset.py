@@ -104,12 +104,12 @@ class DataGenerator(Sequence):
         cutoff_end: float = 1.0,
         test: bool = False,
         shuffle: bool = True,
-        evalualte: bool = False,
+        evaluate: bool = False,
     ):
         self.batch_size: int = batch_size if not test else 1
         if test:
             self.data_dir: str = "./tests/testres"
-        elif evalualte:
+        elif evaluate:
             self.data_dir: str = settings.test_export_dir
         else:
             self.data_dir: str = settings.export_dir

@@ -4,6 +4,7 @@
 Main module
 """
 
+import glob
 import time
 
 from jaipy.dataset import (
@@ -97,7 +98,7 @@ def evaluate():
             cutoff_start=settings.test_cutoff_start,
             cutoff_end=settings.test_cutoff_end,
             shuffle=False,
-            evalualte=True,
+            evaluate=True,
         )
         X, Y_true = test_data[0]
         model.predict_and_evaluate(X, Y_true)
@@ -142,6 +143,19 @@ def live_predict():
         print(f"Number of predictions: {num_predictions}")
         print(f"Total time: {total_time:.3f} seconds")
         print(f"Average time per prediction: {avg_time:.3f} seconds")
+
+
+def predict_images():
+    if settings.weights_file is not None:
+        import cv2  # pylint: disable=import-outside-toplevel
+
+        model = Model()
+        model.load_weights(settings.weights_file)
+
+        for image_file in glob.glob(f"{settings.images_dir}/*.jpg"):
+            image = cv2.imread(image_file)
+            image = convert_cv2_image_to_yolo_like_tensor(image)
+            model.predict(image, nms=True, show=True)
 
 
 def train_test_mock():

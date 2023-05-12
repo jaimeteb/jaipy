@@ -85,8 +85,8 @@ def get_mock_tensor_two_boxes_different_classes(**kwargs) -> tf.Tensor:
     bounding boxes for different classes
     """
     zeros = np.zeros((7, 7, 5, 5))
-    zeros[3, 2, :, 1] = np.array([1.0, 0.3, 0.3, 0.3, 0.3])
-    zeros[4, 4, :, 2] = np.array([1.0, 0.6, 0.6, 0.6, 0.6])
+    zeros[3, 2, 1, :] = np.array([1.0, 0.3, 0.3, 0.3, 0.3])
+    zeros[4, 4, 2, :] = np.array([1.0, 0.6, 0.6, 0.6, 0.6])
     tensor = tf.convert_to_tensor(zeros)
     return tensor
 
