@@ -12,6 +12,9 @@ fiftyone = "^0.19.1"
 pydantic = "^1.10.6"
 colorlog = "^6.7.0"
 mlflow-skinny = "^2.3.0"
+opencv-python = "*"
+torch = "*"
+torchvision = "*"
 
 [build-system]
 requires = ["poetry-core"]
